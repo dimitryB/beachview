@@ -82,14 +82,14 @@ No location picker is required.
 
 The UI must not display Fahrenheit, feet, miles per hour, knots, or inches.
 
-| Quantity | Unit |
-| --- | --- |
-| Temperature | °C |
-| Wave and tide height | m |
-| Wind speed and gust | km/h |
-| Wave period | s |
-| Pressure | hPa |
-| Direction | Cardinal label with optional degrees |
+| Quantity             | Unit                                 |
+| -------------------- | ------------------------------------ |
+| Temperature          | °C                                   |
+| Wave and tide height | m                                    |
+| Wind speed and gust  | km/h                                 |
+| Wave period          | s                                    |
+| Pressure             | hPa                                  |
+| Direction            | Cardinal label with optional degrees |
 
 ### G-05 Freshness and provenance
 
@@ -268,9 +268,12 @@ Open-Meteo currently requires attribution and limits its free noncommercial API 
 - Browser cache, stale states, source attribution, and manual refresh
 - Prominent official safety links
 
-### Follow-up candidates
+### First follow-up
 
 - Structured NWS active-alert integration
+
+### Additional follow-up candidates
+
 - Robust parsing of the NWS Wakefield Surf Zone Forecast
 - Installable PWA and offline application shell
 - User-adjustable comfort thresholds stored locally

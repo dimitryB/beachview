@@ -4,19 +4,19 @@
 
 These instructions apply to the entire repository.
 
-VABeachCast is a proposed static, dark-themed, metric-only beach conditions application for Sandbridge Beach in Virginia Beach, Virginia. The repository currently contains the approved documentation baseline; application implementation has not started.
+VABeachCast is a static, dark-themed, metric-only beach conditions application for Sandbridge Beach in Virginia Beach, Virginia. Phase 0 is complete; live provider integration begins in Phase 1.
 
 ## Read first
 
 Use the documentation as the source of truth:
 
 1. [README.md](README.md)
-2. [Product requirements](docs/PRODUCT_REQUIREMENTS.md)
-3. [Data sources and decision rules](docs/DATA_AND_RULES.md)
-4. [Technical architecture](docs/TECHNICAL_ARCHITECTURE.md)
-5. [UX and visual design](docs/UX_DESIGN.md)
-6. [Testing and operations](docs/TESTING_AND_OPERATIONS.md)
-7. [Implementation roadmap](docs/IMPLEMENTATION_ROADMAP.md)
+2. [Product requirements](PRODUCT_REQUIREMENTS.md)
+3. [Data sources and decision rules](DATA_AND_RULES.md)
+4. [Technical architecture](TECHNICAL_ARCHITECTURE.md)
+5. [UX and visual design](UX_DESIGN.md)
+6. [Testing and operations](TESTING_AND_OPERATIONS.md)
+7. [Implementation roadmap](IMPLEMENTATION_ROADMAP.md)
 
 Update the relevant document when implementation changes a requirement, threshold, data contract, or architectural decision.
 
@@ -58,7 +58,7 @@ Unless the user directs otherwise:
 - Keep rule thresholds in configuration rather than UI components.
 - Start independent provider requests concurrently and support partial success.
 
-Follow the source structure proposed in [Technical Architecture](docs/TECHNICAL_ARCHITECTURE.md).
+Follow the source structure proposed in [Technical Architecture](TECHNICAL_ARCHITECTURE.md).
 
 ## Code quality
 
@@ -86,7 +86,7 @@ Until those scripts exist, validate documentation with:
 
 ```sh
 git diff --check
-rg -n '[[:blank:]]+$' README.md AGENTS.MD docs
+rg -n '[[:blank:]]+$' ./*.md
 ```
 
 Required test coverage includes:

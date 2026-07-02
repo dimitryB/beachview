@@ -17,13 +17,13 @@ These values are application configuration, not user preferences.
 
 ## 2. Source catalog
 
-| Provider | Purpose | Data character |
-| --- | --- | --- |
-| Open-Meteo Weather | Air, wind, pressure, cloud, UV, radiation, sunrise/sunset | Modeled current conditions and forecast |
-| Open-Meteo Marine | Waves, periods, sea-surface temperature | Modeled current conditions and forecast |
-| NOAA CO-OPS | Sandbridge high/low tide times and heights | Official astronomical prediction |
-| NWS | Active hazards and Sandbridge surf-zone guidance | Official warning/forecast, optional integration |
-| Virginia Department of Health | Beach swimming advisories | Official status link; no stable app API assumed |
+| Provider                      | Purpose                                                   | Data character                                  |
+| ----------------------------- | --------------------------------------------------------- | ----------------------------------------------- |
+| Open-Meteo Weather            | Air, wind, pressure, cloud, UV, radiation, sunrise/sunset | Modeled current conditions and forecast         |
+| Open-Meteo Marine             | Waves, periods, sea-surface temperature                   | Modeled current conditions and forecast         |
+| NOAA CO-OPS                   | Sandbridge high/low tide times and heights                | Official astronomical prediction                |
+| NWS                           | Active hazards and Sandbridge surf-zone guidance          | Official warning/forecast, optional integration |
+| Virginia Department of Health | Beach swimming advisories                                 | Official status link; no stable app API assumed |
 
 ## 3. Open-Meteo Weather
 
@@ -46,17 +46,17 @@ https://api.open-meteo.com/v1/forecast
 
 ### Mapping
 
-| API field | Domain field | Unit |
-| --- | --- | --- |
-| `temperature_2m` | Air temperature | °C |
-| `wind_speed_10m` | Sustained wind | km/h |
-| `wind_direction_10m` | Wind-from direction | degrees |
-| `wind_gusts_10m` | Wind gust | km/h |
-| `pressure_msl` | Sea-level pressure | hPa |
-| `cloud_cover` | Total cloud cover | percent |
-| `direct_radiation` | Direct solar radiation | W/m² |
-| `uv_index` | UV index | index |
-| `sunrise`, `sunset` | Local solar boundaries | local time |
+| API field            | Domain field           | Unit       |
+| -------------------- | ---------------------- | ---------- |
+| `temperature_2m`     | Air temperature        | °C         |
+| `wind_speed_10m`     | Sustained wind         | km/h       |
+| `wind_direction_10m` | Wind-from direction    | degrees    |
+| `wind_gusts_10m`     | Wind gust              | km/h       |
+| `pressure_msl`       | Sea-level pressure     | hPa        |
+| `cloud_cover`        | Total cloud cover      | percent    |
+| `direct_radiation`   | Direct solar radiation | W/m²       |
+| `uv_index`           | UV index               | index      |
+| `sunrise`, `sunset`  | Local solar boundaries | local time |
 
 ## 4. Open-Meteo Marine
 
@@ -79,11 +79,11 @@ https://marine-api.open-meteo.com/v1/marine
 
 ### Mapping
 
-| API field | Domain field | Unit |
-| --- | --- | --- |
-| `wave_height` | Significant wave height | m |
-| `wave_period` | Mean wave period | s |
-| `sea_surface_temperature` | Sea-surface temperature | °C |
+| API field                 | Domain field            | Unit |
+| ------------------------- | ----------------------- | ---- |
+| `wave_height`             | Significant wave height | m    |
+| `wave_period`             | Mean wave period        | s    |
+| `sea_surface_temperature` | Sea-surface temperature | °C   |
 
 ### Limitations
 
@@ -120,12 +120,12 @@ Use a buffered request range and filter after converting the returned UTC times 
 
 ### Mapping
 
-| API field | Meaning |
-| --- | --- |
-| `t` | Predicted event time |
-| `v` | Predicted height in meters relative to MLLW |
-| `type: H` | High tide |
-| `type: L` | Low tide |
+| API field | Meaning                                     |
+| --------- | ------------------------------------------- |
+| `t`       | Predicted event time                        |
+| `v`       | Predicted height in meters relative to MLLW |
+| `type: H` | High tide                                   |
+| `type: L` | Low tide                                    |
 
 ### Required terminology
 
@@ -179,11 +179,11 @@ delta = current pressure - pressure 3 hours earlier
 
 Proposed classification:
 
-| Three-hour change | State |
-| --- | --- |
-| `>= +1.0 hPa` | Rising |
-| `<= -1.0 hPa` | Falling |
-| Between thresholds | Steady |
+| Three-hour change  | State   |
+| ------------------ | ------- |
+| `>= +1.0 hPa`      | Rising  |
+| `<= -1.0 hPa`      | Falling |
+| Between thresholds | Steady  |
 
 Display both the state and signed change, for example `Falling −1.4 hPa / 3 h`.
 
@@ -195,13 +195,13 @@ Find the official events immediately before and after the current instant.
 
 ### Phase
 
-| Condition | Phase |
-| --- | --- |
+| Condition                   | Phase           |
+| --------------------------- | --------------- |
 | Within 30 minutes of a high | Near high slack |
-| Within 30 minutes of a low | Near low slack |
-| Next event is high | Incoming |
-| Next event is low | Outgoing |
-| Bounding events unavailable | Unavailable |
+| Within 30 minutes of a low  | Near low slack  |
+| Next event is high          | Incoming        |
+| Next event is low           | Outgoing        |
+| Bounding events unavailable | Unavailable     |
 
 The 30-minute slack band is a product display convention, not a NOAA current prediction.
 
@@ -222,35 +222,40 @@ Rules are evaluated per forecast hour. Each metric returns a semantic state and 
 
 ### 10.1 Approved requirement thresholds
 
-| Metric | Rule | State |
-| --- | --- | --- |
-| Wave height | `>1.0 m` | Red: high waves |
-| Wave period | `<7 s` | Red: choppy |
-| Water temperature | `<20°C` | Cold warning |
-| Water temperature | `>24°C` | Warm-water alert |
+| Metric            | Rule     | State            |
+| ----------------- | -------- | ---------------- |
+| Wave height       | `>1.0 m` | Red: high waves  |
+| Wave period       | `<7 s`   | Red: choppy      |
+| Water temperature | `<20°C`  | Cold warning     |
+| Water temperature | `>24°C`  | Warm-water alert |
 
 At exactly `1.0 m`, wave height does not trigger the red rule. At exactly `7 s`, period does not trigger the red rule. Boundary tests must preserve those semantics.
 
-### 10.2 Proposed thresholds requiring product approval
+### 10.2 Approved wind thresholds
 
-| Metric | Proposed rule | State |
-| --- | --- | --- |
+| Metric         | Rule        | State                   |
+| -------------- | ----------- | ----------------------- |
 | Sustained wind | `>=20 km/h` | Sand/discomfort warning |
-| Wind gust | `>=30 km/h` | Sand/discomfort warning |
-| Sustained wind | `>=35 km/h` | Red: strong wind |
-| Wind gust | `>=50 km/h` | Red: strong gusts |
-| UV | `>=6` | Strong exposure warning |
+| Wind gust      | `>=30 km/h` | Sand/discomfort warning |
+| Sustained wind | `>=35 km/h` | Red: strong wind        |
+| Wind gust      | `>=50 km/h` | Red: strong gusts       |
+
+### 10.3 Exposure thresholds
+
+| Metric           | Initial rule                    | State                          |
+| ---------------- | ------------------------------- | ------------------------------ |
+| UV               | `>=6`                           | Strong exposure warning        |
 | Direct radiation | `>=500 W/m²` during 11:00–15:00 | Direct midday exposure warning |
 
-The wind threshold is configurable because blowing sand depends on grain size, moisture, and beach conditions. The starting value is informed by the Beaufort 4 range in which dust and loose material begin to lift, not by a Sandbridge-specific sand study. See the [NWS Beaufort scale](https://www.weather.gov/crp/BeaufortScale).
+The approved wind thresholds remain configurable because blowing sand depends on grain size, moisture, and beach conditions. The warning value is informed by the Beaufort 4 range in which dust and loose material begin to lift, not by a Sandbridge-specific sand study. See the [NWS Beaufort scale](https://www.weather.gov/crp/BeaufortScale).
 
-The warm-water threshold is implemented as requested but should not be described as a general medical or surf hazard without an approved rationale.
+The approved warm-water state is an alert above `24°C`. It must not be described as a general medical or surf hazard.
 
 ## 11. Late-day swim windows
 
 Generate candidate windows from local hourly records:
 
-1. Consider hours from `15:00` through local sunset.
+1. Consider hours from the approved `15:00` start through local sunset.
 2. Build consecutive two-hour windows.
 3. Require complete wave, period, water, wind, and exposure inputs.
 4. Reject any window containing a red marine or wind state.

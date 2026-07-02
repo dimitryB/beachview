@@ -6,56 +6,58 @@ Implement data correctness and derived rules before visual polish. Each phase sh
 
 The roadmap assumes one static web application and no backend.
 
-## 2. Decisions required before coding
+## 2. Approved product decisions
 
-Resolve these during Phase 0:
+Recorded July 2, 2026:
 
-- [ ] Approve **VABeachCast** as the working product name.
-- [ ] Confirm the warm-water rule remains `>24°C`.
-- [ ] Confirm that the warm state is called an alert, not a general hazard.
-- [ ] Approve proposed wind thresholds: warning at `20 km/h` sustained or `30 km/h` gust.
-- [ ] Approve proposed strong-wind thresholds: `35 km/h` sustained or `50 km/h` gust.
-- [ ] Approve late-day candidate start at `15:00`.
-- [ ] Choose whether structured NWS alerts are MVP or the first follow-up.
+- [x] Use **VABeachCast** as the working product name.
+- [x] Keep the warm-water rule at `>24°C`.
+- [x] Call the warm state an alert, not a general hazard.
+- [x] Warn at `20 km/h` sustained wind or `30 km/h` gust.
+- [x] Use a red strong-wind state at `35 km/h` sustained wind or `50 km/h` gust.
+- [x] Start late-day candidate evaluation at `15:00`.
+- [x] Defer structured NWS alerts to the first follow-up; the MVP provides official source links.
 
 Thresholds must live in configuration so later changes do not require component rewrites.
 
 ## Phase 0 — Repository and product baseline
 
+**Status: Complete — July 2, 2026**
+
 ### Step 1: Initialize the application
 
-- [ ] Create a Vite React TypeScript project in the repository root.
-- [ ] Enable strict TypeScript settings.
-- [ ] Add ESLint, Prettier, Vitest, Testing Library, and Playwright.
-- [ ] Add scripts for `dev`, `build`, `preview`, `lint`, `typecheck`, `test`, and `test:e2e`.
-- [ ] Preserve this documentation structure.
+- [x] Create a Vite React TypeScript project in the repository root.
+- [x] Enable strict TypeScript settings.
+- [x] Add ESLint, Prettier, Vitest, Testing Library, and Playwright.
+- [x] Add scripts for `dev`, `build`, `preview`, `lint`, `typecheck`, `test`, and `test:e2e`.
+- [x] Preserve this documentation structure.
 
 ### Step 2: Establish project conventions
 
-- [ ] Create the source tree described in [Technical Architecture](TECHNICAL_ARCHITECTURE.md).
-- [ ] Add absolute or well-defined import aliases.
-- [ ] Add environment-independent location and rule configuration.
-- [ ] Add a pull-request or contribution checklist if more than one developer will contribute.
+- [x] Create the source tree described in [Technical Architecture](TECHNICAL_ARCHITECTURE.md).
+- [x] Add absolute or well-defined import aliases.
+- [x] Add environment-independent location and rule configuration.
+- [x] Add a contribution checklist.
 
 ### Step 3: Add continuous integration
 
-- [ ] Run formatting, lint, type checking, unit tests, and build on every proposed change.
-- [ ] Cache dependencies without caching build output incorrectly.
-- [ ] Add Playwright after the first browser flow exists.
+- [x] Run formatting, lint, type checking, unit tests, and build on every proposed change.
+- [x] Cache dependencies without caching build output incorrectly.
+- [x] Add Playwright coverage for the first desktop and mobile browser flows.
 
 ### Phase 0 exit criteria
 
-- A clean clone installs and builds.
-- The default page renders a minimal dark shell.
-- CI passes.
-- Product thresholds and terminology decisions are recorded.
+- [x] A locked install builds successfully.
+- [x] The default page renders a minimal responsive dark shell.
+- [x] The local CI-equivalent checks pass and the workflow is configured.
+- [x] Product thresholds and terminology decisions are recorded.
 
 ## Phase 1 — Domain types and provider adapters
 
 ### Step 4: Add fixed Sandbridge configuration
 
-- [ ] Define coordinates, timezone, NOAA station, datum, units, and forecast length.
-- [ ] Write a test that prevents accidental location or unit changes.
+- [x] Define coordinates, timezone, NOAA station, datum, units, and forecast length.
+- [x] Write a test that prevents accidental location or unit changes.
 
 ### Step 5: Define normalized domain types
 
@@ -251,7 +253,9 @@ Thresholds must live in configuration so later changes do not require component 
 - [ ] Add approved “conditions, not a safety determination” language.
 - [ ] Ensure official source content visually outranks derived warnings.
 
-### Step 26: Add structured NWS alerts if included in MVP
+### Step 26: First follow-up — add structured NWS alerts
+
+This step is explicitly deferred and does not block the MVP or the Phase 5 exit criteria.
 
 - [ ] Fetch active alerts for the fixed point.
 - [ ] Validate expiration and geographic applicability.
@@ -278,7 +282,7 @@ Thresholds must live in configuration so later changes do not require component 
 ### Phase 5 exit criteria
 
 - Safety limitations and official links are visible.
-- Official alert behavior, if implemented, is correct and tested.
+- The MVP links to official NWS and VDH sources; structured NWS alert behavior remains a documented follow-up.
 - Both tabs meet the documented keyboard and screen-reader expectations.
 
 ## Phase 6 — Performance, resilience, and PWA option
@@ -354,12 +358,12 @@ PWA support is optional and must not delay a correct responsive web release.
 
 ## 3. Suggested milestone grouping
 
-| Milestone | Phases | Demonstrable outcome |
-| --- | --- | --- |
-| M1: Data foundation | 0–2 | Tested Sandbridge domain model and derived rules |
-| M2: Usable dashboard | 3 | Responsive live current conditions in both tabs |
-| M3: Complete MVP | 4–5 | Tide chart, ten-day views, safety/provenance, accessibility |
-| M4: Production release | 6–7 | Resilient, optimized, deployed static application |
+| Milestone              | Phases | Demonstrable outcome                                        |
+| ---------------------- | ------ | ----------------------------------------------------------- |
+| M1: Data foundation    | 0–2    | Tested Sandbridge domain model and derived rules            |
+| M2: Usable dashboard   | 3      | Responsive live current conditions in both tabs             |
+| M3: Complete MVP       | 4–5    | Tide chart, ten-day views, safety/provenance, accessibility |
+| M4: Production release | 6–7    | Resilient, optimized, deployed static application           |
 
 ## 4. Definition of done
 

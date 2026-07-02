@@ -80,14 +80,14 @@ Mock provider responses for deterministic CI. Keep one optional live smoke test 
 
 Use fixed clocks and include:
 
-| Scenario | Expected behavior |
-| --- | --- |
-| Viewer device set to Pacific time | Every displayed time remains Eastern |
-| Event just after `00:00 UTC` | Assigned to the correct prior Eastern date when applicable |
-| Spring DST transition | Missing local hour does not create a fake forecast record |
-| Fall DST transition | Repeated local hour remains distinguishable internally |
-| High tide near local midnight | Appears on exactly one correct day |
-| Ten-day range crossing DST | Day cards remain ordered and correctly grouped |
+| Scenario                          | Expected behavior                                          |
+| --------------------------------- | ---------------------------------------------------------- |
+| Viewer device set to Pacific time | Every displayed time remains Eastern                       |
+| Event just after `00:00 UTC`      | Assigned to the correct prior Eastern date when applicable |
+| Spring DST transition             | Missing local hour does not create a fake forecast record  |
+| Fall DST transition               | Repeated local hour remains distinguishable internally     |
+| High tide near local midnight     | Appears on exactly one correct day                         |
+| Ten-day range crossing DST        | Day cards remain ordered and correctly grouped             |
 
 NOAA fixtures should use GMT output and explicit UTC parsing.
 
@@ -168,16 +168,16 @@ Live tests should report a provider issue without blocking unrelated local devel
 
 ## 8. Failure behavior
 
-| Failure | Required response |
-| --- | --- |
-| Request timeout | Use valid cache or show provider-specific error |
-| HTTP error | Same as timeout; log safe diagnostic information |
-| Invalid JSON | Reject adapter result; never partially trust malformed content |
-| Missing metric | Render that metric unavailable |
-| Misaligned hourly arrays | Reject or safely truncate with an explicit adapter diagnostic |
-| NOAA error object | Show tide unavailable; retain valid cached events |
-| Offline browser | Render cached sections and clear offline status |
-| Expired official alert | Remove it even if it exists in cache |
+| Failure                  | Required response                                              |
+| ------------------------ | -------------------------------------------------------------- |
+| Request timeout          | Use valid cache or show provider-specific error                |
+| HTTP error               | Same as timeout; log safe diagnostic information               |
+| Invalid JSON             | Reject adapter result; never partially trust malformed content |
+| Missing metric           | Render that metric unavailable                                 |
+| Misaligned hourly arrays | Reject or safely truncate with an explicit adapter diagnostic  |
+| NOAA error object        | Show tide unavailable; retain valid cached events              |
+| Offline browser          | Render cached sections and clear offline status                |
+| Expired official alert   | Remove it even if it exists in cache                           |
 
 Do not retry aggressively. One controlled retry with jitter is sufficient for transient current-data failures; manual refresh remains available.
 

@@ -98,19 +98,19 @@ Do not create a dense “control room” dashboard. Desktop adds breathing room 
 
 Initial palette:
 
-| Token | Value | Use |
-| --- | --- | --- |
-| `--color-bg` | `#07131F` | Page background |
-| `--color-surface` | `#0D1D2A` | Primary cards |
-| `--color-surface-raised` | `#132838` | Selected/raised content |
-| `--color-border` | `#274152` | Borders and graph grid |
-| `--color-text` | `#F2F7FA` | Primary text |
-| `--color-text-muted` | `#A6BAC6` | Secondary text |
-| `--color-accent` | `#49C6D5` | Navigation, links, tide line |
-| `--color-positive` | `#4DD592` | Preference match |
-| `--color-warning` | `#F2B85B` | Cold, warm, sand, exposure |
-| `--color-danger` | `#FF6878` | Red conditions and hazards |
-| `--color-cold` | `#63A8FF` | Cold-water distinction |
+| Token                    | Value     | Use                          |
+| ------------------------ | --------- | ---------------------------- |
+| `--color-bg`             | `#07131F` | Page background              |
+| `--color-surface`        | `#0D1D2A` | Primary cards                |
+| `--color-surface-raised` | `#132838` | Selected/raised content      |
+| `--color-border`         | `#274152` | Borders and graph grid       |
+| `--color-text`           | `#F2F7FA` | Primary text                 |
+| `--color-text-muted`     | `#A6BAC6` | Secondary text               |
+| `--color-accent`         | `#49C6D5` | Navigation, links, tide line |
+| `--color-positive`       | `#4DD592` | Preference match             |
+| `--color-warning`        | `#F2B85B` | Cold, warm, sand, exposure   |
+| `--color-danger`         | `#FF6878` | Red conditions and hazards   |
+| `--color-cold`           | `#63A8FF` | Cold-water distinction       |
 
 All final foreground/background pairs must pass automated and manual WCAG AA contrast checks. The palette is a starting point, not proof of compliance.
 
@@ -127,22 +127,27 @@ Use the operating system font stack to avoid a font request and improve initial 
 
 ```css
 font-family:
-  Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
-  "Segoe UI", sans-serif;
+  Inter,
+  ui-sans-serif,
+  system-ui,
+  -apple-system,
+  BlinkMacSystemFont,
+  "Segoe UI",
+  sans-serif;
 ```
 
 Inter is used only when locally available; do not download it for the MVP.
 
 Recommended scale:
 
-| Role | Size | Weight |
-| --- | --- | --- |
-| Primary current value | `2.25–3rem` | `700` |
-| Page/view heading | `1.5–2rem` | `700` |
-| Card value | `1.5rem` | `650` |
-| Card heading | `0.875rem` | `650`, uppercase optional |
-| Body | `1rem` | `400` |
-| Metadata | `0.8125rem` | `400` |
+| Role                  | Size        | Weight                    |
+| --------------------- | ----------- | ------------------------- |
+| Primary current value | `2.25–3rem` | `700`                     |
+| Page/view heading     | `1.5–2rem`  | `700`                     |
+| Card value            | `1.5rem`    | `650`                     |
+| Card heading          | `0.875rem`  | `650`, uppercase optional |
+| Body                  | `1rem`      | `400`                     |
+| Metadata              | `0.8125rem` | `400`                     |
 
 Use tabular numerals for measurements and times.
 
@@ -314,12 +319,12 @@ Avoid generic messages such as “Something went wrong” unless accompanied by 
 
 Suggested layout breakpoints:
 
-| Width | Behavior |
-| --- | --- |
-| `<480 px` | Single column, compact header, two-column metric pairs where readable |
-| `480–767 px` | Single column with wider metric grid |
-| `768–1023 px` | Two-column major cards, expanded tide chart |
-| `>=1024 px` | 12-column desktop composition |
+| Width         | Behavior                                                              |
+| ------------- | --------------------------------------------------------------------- |
+| `<480 px`     | Single column, compact header, two-column metric pairs where readable |
+| `480–767 px`  | Single column with wider metric grid                                  |
+| `768–1023 px` | Two-column major cards, expanded tide chart                           |
+| `>=1024 px`   | 12-column desktop composition                                         |
 
 Use content-driven CSS grid and container queries where practical. Breakpoints are guidance, not device categories.
 

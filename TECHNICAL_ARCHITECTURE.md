@@ -21,17 +21,17 @@ flowchart LR
 
 ## 2. Recommended stack
 
-| Concern | Choice | Rationale |
-| --- | --- | --- |
-| Build tool | Vite | Small, fast static builds and simple deployment |
-| UI | React | Clear component/state model for independent feed states |
-| Language | TypeScript with strict mode | Protects provider adapters and derived calculations |
-| Styling | CSS modules or colocated plain CSS | No runtime styling dependency is necessary |
-| Tide chart | Custom semantic SVG | Precise control, small bundle, accessible fallback |
-| Unit tests | Vitest | Fast tests for adapters and boundary rules |
-| Component tests | Testing Library | Behavior and accessibility-oriented assertions |
-| Browser tests | Playwright | Responsive, navigation, failure, and accessibility flows |
-| Formatting/linting | Prettier and ESLint | Consistent code and early defect detection |
+| Concern            | Choice                             | Rationale                                                |
+| ------------------ | ---------------------------------- | -------------------------------------------------------- |
+| Build tool         | Vite                               | Small, fast static builds and simple deployment          |
+| UI                 | React                              | Clear component/state model for independent feed states  |
+| Language           | TypeScript with strict mode        | Protects provider adapters and derived calculations      |
+| Styling            | CSS modules or colocated plain CSS | No runtime styling dependency is necessary               |
+| Tide chart         | Custom semantic SVG                | Precise control, small bundle, accessible fallback       |
+| Unit tests         | Vitest                             | Fast tests for adapters and boundary rules               |
+| Component tests    | Testing Library                    | Behavior and accessibility-oriented assertions           |
+| Browser tests      | Playwright                         | Responsive, navigation, failure, and accessibility flows |
+| Formatting/linting | Prettier and ESLint                | Consistent code and early defect detection               |
 
 Avoid a server-rendering framework for the MVP. There is no private data or server-only behavior, and a static application has the simplest cost and deployment model.
 
@@ -113,10 +113,7 @@ The exact TypeScript design can evolve, but the normalized model should preserve
 
 ```ts
 type DataSource =
-  | "open-meteo-weather"
-  | "open-meteo-marine"
-  | "noaa-tides"
-  | "nws-alerts";
+  "open-meteo-weather" | "open-meteo-marine" | "noaa-tides" | "nws-alerts";
 
 interface DataPoint<T> {
   value: T | null;
@@ -159,14 +156,14 @@ Use `Promise.allSettled`, not `Promise.all`, so one rejected provider does not d
 
 Store a separate versioned cache entry per provider.
 
-| Data | Normal refresh | Stale warning | Maximum fallback |
-| --- | --- | --- | --- |
-| Current weather | 15 minutes | 30 minutes | 6 hours |
-| Hourly weather forecast | 30 minutes | 2 hours | 12 hours |
-| Current marine | 30 minutes | 1 hour | 6 hours |
-| Marine forecast | 1 hour | 3 hours | 12 hours |
-| NOAA tide predictions | 12 hours | 24 hours | End of covered range |
-| NWS active alerts | 5 minutes | 10 minutes | Do not show expired alerts |
+| Data                    | Normal refresh | Stale warning | Maximum fallback           |
+| ----------------------- | -------------- | ------------- | -------------------------- |
+| Current weather         | 15 minutes     | 30 minutes    | 6 hours                    |
+| Hourly weather forecast | 30 minutes     | 2 hours       | 12 hours                   |
+| Current marine          | 30 minutes     | 1 hour        | 6 hours                    |
+| Marine forecast         | 1 hour         | 3 hours       | 12 hours                   |
+| NOAA tide predictions   | 12 hours       | 24 hours      | End of covered range       |
+| NWS active alerts       | 5 minutes      | 10 minutes    | Do not show expired alerts |
 
 These are application policies, not provider update guarantees.
 
@@ -233,14 +230,14 @@ The page-level state is composed from section states; it is not a single loading
 
 Expected presentation:
 
-| State | Presentation |
-| --- | --- |
-| Loading with no cache | Skeleton preserving final layout |
-| Fresh | Normal content and updated time |
-| Refreshing with cache | Existing content plus subtle refresh indicator |
-| Stale | Existing content, stale badge, failed-refresh message |
-| Error with no cache | Compact error and retry action |
-| Partial data | Render available metrics and mark missing metrics unavailable |
+| State                 | Presentation                                                  |
+| --------------------- | ------------------------------------------------------------- |
+| Loading with no cache | Skeleton preserving final layout                              |
+| Fresh                 | Normal content and updated time                               |
+| Refreshing with cache | Existing content plus subtle refresh indicator                |
+| Stale                 | Existing content, stale badge, failed-refresh message         |
+| Error with no cache   | Compact error and retry action                                |
+| Partial data          | Render available metrics and mark missing metrics unavailable |
 
 ## 11. Routing
 
@@ -255,13 +252,13 @@ The tab control follows the ARIA tabs pattern or uses ordinary links with clear 
 
 ## 12. Performance budget
 
-| Budget | Target |
-| --- | --- |
-| Initial JavaScript | `<150 KB` gzip |
-| Initial CSS | `<30 KB` gzip |
-| App shell render | `<500 ms` on a typical modern mobile device |
+| Budget              | Target                                          |
+| ------------------- | ----------------------------------------------- |
+| Initial JavaScript  | `<150 KB` gzip                                  |
+| Initial CSS         | `<30 KB` gzip                                   |
+| App shell render    | `<500 ms` on a typical modern mobile device     |
 | Primary data target | `<2 s` under normal provider/network conditions |
-| Layout shift | Near zero after skeleton render |
+| Layout shift        | Near zero after skeleton render                 |
 
 Implementation tactics:
 
