@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="VABeachCast wave">
+  <rect width="64" height="64" rx="16" fill="#0d1d2a"/>
+  <path d="M9 37c8 0 8-10 16-10s8 10 16 10 8-10 14-10" fill="none" stroke="#49c6d5" stroke-width="6" stroke-linecap="round"/>
+  <path d="M10 47h44" fill="none" stroke="#4dd592" stroke-width="4" stroke-linecap="round"/>
+</svg>
