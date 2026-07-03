@@ -11,7 +11,7 @@ The application is intended to be a lightweight static web app that can run on a
 
 ## Project status
 
-Phase 0 is complete. The repository now contains the Vite/React/TypeScript application scaffold, a responsive dark shell, fixed Sandbridge configuration, automated tests, and continuous integration. Live weather, marine, and tide adapters begin in Phase 1.
+Phases 0 and 1 are complete. The application now has a responsive dark shell, strict normalized domain types, live Open-Meteo weather and marine adapters, NOAA Sandbridge tide predictions, typed provider errors, partial-provider rendering, and versioned browser caching. Comfort rules and tide/window derivations begin in Phase 2.
 
 ## Fixed operating scope
 
@@ -72,4 +72,4 @@ This product summarizes conditions; it does not determine whether swimming is sa
 
 ## Recommended next action
 
-Begin Phase 1 in the [implementation roadmap](IMPLEMENTATION_ROADMAP.md): define normalized domain types and implement the weather, marine, and NOAA provider adapters behind tested boundaries.
+Begin Phase 2 in the [implementation roadmap](IMPLEMENTATION_ROADMAP.md): implement wind utilities, pressure tendency, tide interpolation and phase, approved swim rules, and explainable candidate windows.

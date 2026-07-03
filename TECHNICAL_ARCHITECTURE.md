@@ -174,6 +174,7 @@ interface CacheEnvelope<T> {
   schemaVersion: 1;
   provider: DataSource;
   fetchedAt: string;
+  staleAt: string;
   expiresAt: string;
   data: T;
 }
@@ -189,6 +190,7 @@ Rules:
 
 - Store internal instants as ISO 8601 UTC strings.
 - Format every displayed time using `America/New_York`, never the device timezone.
+- Query Open-Meteo weather and marine output in GMT, then format or group it in the Sandbridge timezone.
 - Query NOAA tide output in GMT, parse it explicitly as UTC, then format it for Sandbridge.
 - Request a one-day buffer before and after the visible NOAA range, then filter events by Sandbridge local date.
 - Group forecast hours into days only after converting each instant to the target timezone.

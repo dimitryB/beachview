@@ -1,6 +1,11 @@
 import { BEACH } from "@/config/location";
 
-export function AppHeader() {
+interface AppHeaderProps {
+  isRefreshing: boolean;
+  onRefresh: () => void;
+}
+
+export function AppHeader({ isRefreshing, onRefresh }: AppHeaderProps) {
   return (
     <header className="site-header">
       <a className="brand" href="?view=swimming" aria-label="VABeachCast home">
@@ -22,9 +27,20 @@ export function AppHeader() {
           </span>
         </span>
       </a>
-      <p className="scope-badge">
-        <span aria-hidden="true">●</span> Metric · Eastern Time
-      </p>
+      <div className="site-header__actions">
+        <p className="scope-badge">
+          <span aria-hidden="true">●</span> Metric · Eastern Time
+        </p>
+        <button
+          className="refresh-button"
+          disabled={isRefreshing}
+          onClick={onRefresh}
+          type="button"
+        >
+          <span aria-hidden="true">↻</span>
+          {isRefreshing ? "Refreshing" : "Refresh"}
+        </button>
+      </div>
     </header>
   );
 }

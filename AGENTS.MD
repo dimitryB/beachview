@@ -4,7 +4,7 @@
 
 These instructions apply to the entire repository.
 
-VABeachCast is a static, dark-themed, metric-only beach conditions application for Sandbridge Beach in Virginia Beach, Virginia. Phase 0 is complete; live provider integration begins in Phase 1.
+VABeachCast is a static, dark-themed, metric-only beach conditions application for Sandbridge Beach in Virginia Beach, Virginia. Phases 0 and 1 are complete; derived condition logic begins in Phase 2.
 
 ## Read first
 

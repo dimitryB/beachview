@@ -39,24 +39,26 @@ https://api.open-meteo.com/v1/forecast
   &hourly=temperature_2m,wind_speed_10m,wind_direction_10m,wind_gusts_10m,pressure_msl,cloud_cover,direct_radiation,uv_index
   &daily=sunrise,sunset
   &forecast_days=10
-  &timezone=America/New_York
+  &timezone=GMT
   &temperature_unit=celsius
   &wind_speed_unit=kmh
 ```
 
 ### Mapping
 
-| API field            | Domain field           | Unit       |
-| -------------------- | ---------------------- | ---------- |
-| `temperature_2m`     | Air temperature        | °C         |
-| `wind_speed_10m`     | Sustained wind         | km/h       |
-| `wind_direction_10m` | Wind-from direction    | degrees    |
-| `wind_gusts_10m`     | Wind gust              | km/h       |
-| `pressure_msl`       | Sea-level pressure     | hPa        |
-| `cloud_cover`        | Total cloud cover      | percent    |
-| `direct_radiation`   | Direct solar radiation | W/m²       |
-| `uv_index`           | UV index               | index      |
-| `sunrise`, `sunset`  | Local solar boundaries | local time |
+| API field            | Domain field            | Unit           |
+| -------------------- | ----------------------- | -------------- |
+| `temperature_2m`     | Air temperature         | °C             |
+| `wind_speed_10m`     | Sustained wind          | km/h           |
+| `wind_direction_10m` | Wind-from direction     | degrees        |
+| `wind_gusts_10m`     | Wind gust               | km/h           |
+| `pressure_msl`       | Sea-level pressure      | hPa            |
+| `cloud_cover`        | Total cloud cover       | percent        |
+| `direct_radiation`   | Direct solar radiation  | W/m²           |
+| `uv_index`           | UV index                | index          |
+| `sunrise`, `sunset`  | Solar boundary instants | UTC internally |
+
+The implementation requests GMT timestamps so every internal instant is unambiguous. Display formatting and local-day grouping always use `America/New_York`.
 
 ## 4. Open-Meteo Marine
 
@@ -71,7 +73,7 @@ https://marine-api.open-meteo.com/v1/marine
   &current=wave_height,wave_period,sea_surface_temperature
   &hourly=wave_height,wave_period,sea_surface_temperature
   &forecast_days=10
-  &timezone=America/New_York
+  &timezone=GMT
   &length_unit=metric
   &velocity_unit=kmh
   &cell_selection=sea

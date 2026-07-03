@@ -3,6 +3,33 @@ import userEvent from "@testing-library/user-event";
 
 import { App } from "@/app/App";
 
+vi.mock("@/hooks/use-beach-data", () => ({
+  useBeachData: () => ({
+    weather: {
+      status: "loading",
+      data: null,
+      error: null,
+      fetchedAt: null,
+      isRefreshing: false,
+    },
+    marine: {
+      status: "loading",
+      data: null,
+      error: null,
+      fetchedAt: null,
+      isRefreshing: false,
+    },
+    tides: {
+      status: "loading",
+      data: null,
+      error: null,
+      fetchedAt: null,
+      isRefreshing: false,
+    },
+    refreshAll: vi.fn(async () => Promise.resolve()),
+  }),
+}));
+
 describe("App", () => {
   beforeEach(() => {
     window.history.replaceState(null, "", "/");

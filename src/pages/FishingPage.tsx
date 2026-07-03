@@ -1,7 +1,26 @@
-import { ConditionPlaceholder } from "@/components/conditions/ConditionPlaceholder";
+import { ConditionCard } from "@/components/conditions/ConditionCard";
+import { DataStatus } from "@/components/conditions/DataStatus";
+import { formatNumber } from "@/components/format";
 import { TidePlaceholder } from "@/components/tide/TidePlaceholder";
+import type { BeachDataState } from "@/types/domain";
 
-export function FishingPage() {
+interface FishingPageProps {
+  data: BeachDataState;
+}
+
+export function FishingPage({ data }: FishingPageProps) {
+  const weather = data.weather.data?.current;
+  const tideDescription = data.tides.data
+    ? `${data.tides.data.events.length} predicted events loaded · phase follows in Phase 2`
+    : (data.tides.error ?? "Loading NOAA high and low predictions");
+  const windDescription =
+    weather?.windDirectionDeg.value !== null &&
+    weather?.windDirectionDeg.value !== undefined
+      ? `From ${formatNumber(weather.windDirectionDeg.value, 0)}° · Gust ${
+          formatNumber(weather.windGustKmh.value) ?? "unavailable"
+        } km/h`
+      : "Sustained speed, direction, and gust";
+
   return (
     <div className="view-stack">
       <section className="hero-panel" aria-labelledby="fishing-heading">
@@ -11,7 +30,7 @@ export function FishingPage() {
             Fishing signals, ordered around the tide.
           </h1>
           <p className="hero-panel__summary">
-            Predicted tide phase, pressure tendency, and wind behavior for
+            Predicted tide events, modeled pressure, and wind behavior for
             planning a Sandbridge casting window.
           </p>
         </div>
@@ -31,29 +50,38 @@ export function FishingPage() {
         <div className="section-heading">
           <div>
             <p className="eyebrow">Marine dashboard</p>
-            <h2 id="fishing-current-heading">Current fishing signals</h2>
+            <h2 id="fishing-current-heading">Current fishing inputs</h2>
           </div>
-          <span className="phase-badge">Awaiting data</span>
+          <div className="data-status-row">
+            <DataStatus label="Weather" state={data.weather} />
+            <DataStatus label="NOAA" state={data.tides} />
+          </div>
         </div>
         <div className="condition-grid condition-grid--fishing">
-          <ConditionPlaceholder
-            description="Incoming, outgoing, or near slack"
+          <ConditionCard
+            description={tideDescription}
             label="Tide phase"
+            status={data.tides.status}
+            value={null}
           />
-          <ConditionPlaceholder
-            description="Three-hour sea-level tendency"
+          <ConditionCard
+            description="Modeled sea-level pressure; tendency follows in Phase 2"
             label="Pressure"
+            status={data.weather.status}
             unit="hPa"
+            value={formatNumber(weather?.pressureHpa.value ?? null, 0)}
           />
-          <ConditionPlaceholder
-            description="Sustained speed and direction"
+          <ConditionCard
+            description={windDescription}
             label="Wind"
+            status={data.weather.status}
             unit="km/h"
+            value={formatNumber(weather?.windSpeedKmh.value ?? null)}
           />
         </div>
       </section>
 
-      <TidePlaceholder />
+      <TidePlaceholder tides={data.tides} />
     </div>
   );
 }

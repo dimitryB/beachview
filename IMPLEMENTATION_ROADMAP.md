@@ -54,6 +54,8 @@ Thresholds must live in configuration so later changes do not require component 
 
 ## Phase 1 — Domain types and provider adapters
 
+**Status: Complete — July 2, 2026**
+
 ### Step 4: Add fixed Sandbridge configuration
 
 - [x] Define coordinates, timezone, NOAA station, datum, units, and forecast length.
@@ -61,54 +63,54 @@ Thresholds must live in configuration so later changes do not require component 
 
 ### Step 5: Define normalized domain types
 
-- [ ] Add types for timestamps, values, provenance, freshness, current conditions, hourly forecasts, tide events, and alerts.
-- [ ] Represent missing values with `null`.
-- [ ] Distinguish modeled, predicted, derived, and official-alert data.
+- [x] Add types for timestamps, values, provenance, freshness, current conditions, hourly forecasts, tide events, and alerts.
+- [x] Represent missing values with `null`.
+- [x] Distinguish modeled, predicted, derived, and official-alert data.
 
 ### Step 6: Build the shared fetch utility
 
-- [ ] Add timeout support with `AbortController`.
-- [ ] Check response status and parse JSON safely.
-- [ ] Return typed provider errors.
-- [ ] Record fetch duration and timestamp.
-- [ ] Add controlled retry behavior for transient failures.
+- [x] Add timeout support with `AbortController`.
+- [x] Check response status and parse JSON safely.
+- [x] Return typed provider errors.
+- [x] Record fetch duration and timestamp.
+- [x] Add controlled retry behavior for transient failures.
 
 ### Step 7: Implement Open-Meteo Weather
 
-- [ ] Build the fixed request URL.
-- [ ] Validate current, hourly, daily, and unit fields.
-- [ ] Normalize air, wind, pressure, cloud, UV, radiation, sunrise, and sunset.
-- [ ] Add normal, missing-value, malformed, and provider-error fixtures.
+- [x] Build the fixed request URL.
+- [x] Validate current, hourly, daily, and unit fields.
+- [x] Normalize air, wind, pressure, cloud, UV, radiation, sunrise, and sunset.
+- [x] Add normal, missing-value, malformed, and provider-error fixtures.
 
 ### Step 8: Implement Open-Meteo Marine
 
-- [ ] Build the fixed request URL with sea-cell selection and metric units.
-- [ ] Normalize wave height, wave period, and sea-surface temperature.
-- [ ] Preserve returned grid coordinates for source details.
-- [ ] Test nulls and differing hourly coverage.
+- [x] Build the fixed request URL with sea-cell selection and metric units.
+- [x] Normalize wave height, wave period, and sea-surface temperature.
+- [x] Preserve returned grid coordinates for source details.
+- [x] Test nulls and differing hourly coverage.
 
 ### Step 9: Implement NOAA tides
 
-- [ ] Build buffered GMT requests for station `8639428`.
-- [ ] Detect NOAA error objects even when the HTTP response succeeds.
-- [ ] Parse NOAA timestamps explicitly as UTC.
-- [ ] Normalize high/low events and MLLW heights.
-- [ ] Convert/filter only after applying the Sandbridge timezone.
-- [ ] Test high/low events around local midnight and DST changes.
+- [x] Build buffered GMT requests for station `8639428`.
+- [x] Detect NOAA error objects even when the HTTP response succeeds.
+- [x] Parse NOAA timestamps explicitly as UTC.
+- [x] Normalize high/low events and MLLW heights.
+- [x] Convert/filter only after applying the Sandbridge timezone.
+- [x] Test high/low events around local midnight and DST changes.
 
 ### Step 10: Add browser caching
 
-- [ ] Store each provider independently.
-- [ ] Add schema version, fetch time, expiry, and provider identifier.
-- [ ] Reject corrupt or incompatible entries.
-- [ ] Implement fresh, refreshing, stale, error, and unavailable states.
+- [x] Store each provider independently.
+- [x] Add schema version, fetch time, stale time, expiry, and provider identifier.
+- [x] Reject corrupt or incompatible entries.
+- [x] Implement loading, fresh, refreshing, stale, and error/unavailable presentation states.
 
 ### Phase 1 exit criteria
 
-- Tests produce a complete normalized data model from fixtures.
-- Live development requests return metric Sandbridge data.
-- One provider can fail without discarding the others.
-- Cached fixture data can render before a refresh completes.
+- [x] Tests produce a complete normalized data model from fixtures.
+- [x] Live development requests return metric Sandbridge data.
+- [x] One provider can fail without discarding the others.
+- [x] Cached fixture data can render before a refresh completes.
 
 ## Phase 2 — Derived domain behavior
 
