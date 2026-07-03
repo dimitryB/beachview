@@ -5,8 +5,7 @@ import {
   WEATHER_RESPONSE,
 } from "../src/test/fixtures/providers";
 
-function noaaResponseForToday() {
-  const base = Date.now();
+function noaaResponseForToday(base = Date.now()) {
   const event = (offsetHours: number, height: string, type: "H" | "L") => {
     const instant = new Date(base + offsetHours * 60 * 60 * 1_000);
     return {
@@ -27,7 +26,10 @@ function noaaResponseForToday() {
   };
 }
 
-export async function mockSuccessfulProviders(page: Page): Promise<void> {
+export async function mockSuccessfulProviders(
+  page: Page,
+  now = Date.now(),
+): Promise<void> {
   await page.route("https://api.open-meteo.com/**", async (route) => {
     await route.fulfill({ json: WEATHER_RESPONSE });
   });
@@ -37,7 +39,7 @@ export async function mockSuccessfulProviders(page: Page): Promise<void> {
   await page.route(
     "https://api.tidesandcurrents.noaa.gov/**",
     async (route) => {
-      await route.fulfill({ json: noaaResponseForToday() });
+      await route.fulfill({ json: noaaResponseForToday(now) });
     },
   );
 }

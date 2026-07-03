@@ -11,7 +11,7 @@ The application is intended to be a lightweight static web app that can run on a
 
 ## Project status
 
-Phases 0 through 6 are implemented. The application now has a responsive dark shell; strict normalized weather, marine, and tide data; resilient provider caching; tested derived behavior; semantic Swimming and Fishing outlooks; an estimated NOAA-bounded tide chart; prominent official safety links; complete source/grid/station provenance; and automated WCAG A/AA checks. Independent provider requests start concurrently, the ten-day outlooks load after current conditions, repeated in-flight refreshes are coalesced, and production builds enforce the documented bundle budgets. Provider failures remain isolated with stale, offline, unavailable, and scoped retry states. Structured NWS alert fetching remains the explicitly deferred first follow-up, and manual screen-reader and `200%` browser-zoom confirmation remain part of release testing.
+Phases 0 through 7 are implemented as a release candidate. The application now has a responsive dark shell; strict normalized weather, marine, and tide data; resilient provider caching; tested derived behavior; semantic Swimming and Fishing outlooks; an estimated NOAA-bounded tide chart; prominent official safety links; complete source/grid/station provenance; and automated WCAG A/AA checks. Independent provider requests start concurrently, the ten-day outlooks load after current conditions, repeated in-flight refreshes are coalesced, and production builds enforce the documented bundle budgets. Provider failures remain isolated with stale, offline, unavailable, and scoped retry states. GitHub Pages deployment, dependency updates, and monthly live-provider checks are configured. Structured NWS alert fetching remains the explicitly deferred first follow-up; publication plus manual screen-reader and `200%` browser-zoom confirmation require the repository owner.
 
 ## Fixed operating scope
 
@@ -60,6 +60,8 @@ This product summarizes conditions; it does not determine whether swimming is sa
 | [Testing and operations](TESTING_AND_OPERATIONS.md)  | Quality strategy, failure cases, deployment, and production checks              |
 | [Implementation roadmap](IMPLEMENTATION_ROADMAP.md)  | Step-by-step delivery plan with phase exit criteria                             |
 | [Contributing](CONTRIBUTING.md)                      | Local setup, required checks, and working conventions                           |
+| [Deployment](DEPLOYMENT.md)                          | GitHub Pages setup, smoke checks, custom domains, and rollback                  |
+| [Release log](RELEASES.md)                           | Release contents, verification, terms review, and maintenance cadence           |
 
 ## External documentation
 
@@ -72,4 +74,4 @@ This product summarizes conditions; it does not determine whether swimming is sa
 
 ## Recommended next action
 
-Begin Phase 7 in the [implementation roadmap](IMPLEMENTATION_ROADMAP.md): complete manual release testing, choose the static host, configure deployment, and run live post-deployment checks.
+Follow the [GitHub Pages deployment guide](DEPLOYMENT.md), then complete the repository-owner production, screen-reader, and `200%` zoom checks.

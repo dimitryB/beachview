@@ -126,6 +126,20 @@ describe("TideChart", () => {
     expect(screen.getByText(/Estimated -0\.20 m/)).toBeInTheDocument();
   });
 
+  it("drops a passed event and advances the summary while the app stays open", () => {
+    render(<TideChart onRetry={vi.fn()} tides={tides} />);
+    expect(screen.getByText(/Next predicted low -0\.20 m/)).toBeInTheDocument();
+
+    act(() => {
+      vi.advanceTimersByTime(31 * 60 * 1_000);
+    });
+
+    expect(
+      screen.queryByText(/Next predicted low -0\.20 m/),
+    ).not.toBeInTheDocument();
+    expect(screen.getByText(/Next predicted high 1\.00 m/)).toBeInTheDocument();
+  });
+
   it("shows the loading state without a chart or table", () => {
     render(
       <TideChart

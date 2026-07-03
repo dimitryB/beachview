@@ -145,7 +145,11 @@ export function SourceDetails({ data }: SourceDetailsProps) {
         <a href="https://open-meteo.com/" rel="noreferrer">
           Open-Meteo
         </a>{" "}
-        (CC BY 4.0). Tide predictions by{" "}
+        (
+        <a href="https://open-meteo.com/en/license" rel="noreferrer">
+          CC BY 4.0
+        </a>
+        ). Tide predictions by{" "}
         <a href="https://tidesandcurrents.noaa.gov/" rel="noreferrer">
           NOAA CO-OPS
         </a>

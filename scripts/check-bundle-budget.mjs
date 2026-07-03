@@ -21,7 +21,15 @@ function formatKilobytes(bytes) {
 }
 
 async function gzipBytes(assetPath) {
-  const normalized = assetPath.replace(/^\/+/, "");
+  const pathname = new URL(assetPath, "https://vabeachcast.invalid/").pathname;
+  const segments = pathname.split("/").filter(Boolean);
+  const assetsIndex = segments.lastIndexOf("assets");
+  if (assetsIndex < 0) {
+    throw new Error(
+      `Built asset URL is outside the assets directory: ${assetPath}`,
+    );
+  }
+  const normalized = segments.slice(assetsIndex).join("/");
   const contents = await readFile(path.join(dist, normalized));
   return gzipSync(contents).byteLength;
 }

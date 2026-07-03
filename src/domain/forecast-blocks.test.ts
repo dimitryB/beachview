@@ -261,6 +261,43 @@ describe("late-day swimming forecast", () => {
     expect(forecast.map((day) => day.state)).toEqual(["match", "match"]);
   });
 
+  it("keeps ten local-day cards ordered across the fall DST transition", () => {
+    const localDates = [
+      "2026-10-28",
+      "2026-10-29",
+      "2026-10-30",
+      "2026-10-31",
+      "2026-11-01",
+      "2026-11-02",
+      "2026-11-03",
+      "2026-11-04",
+      "2026-11-05",
+      "2026-11-06",
+    ];
+    const weather: WeatherForecastHour[] = [];
+    const marine: MarineForecastHour[] = [];
+    const solar: SolarDay[] = [];
+
+    for (const date of localDates) {
+      const afterDstChange = date >= "2026-11-01";
+      const hours = afterDstChange ? [20, 21] : [19, 20];
+      for (const hour of hours) {
+        const validAt = `${date}T${hour}:00:00.000Z`;
+        weather.push(weatherHour(validAt));
+        marine.push(marineHour(validAt));
+      }
+      solar.push(
+        solarDay(date, `${date}T${afterDstChange ? "23" : "22"}:00:00.000Z`),
+      );
+    }
+
+    const forecast = buildSwimmingForecast(weather, marine, solar);
+
+    expect(forecast).toHaveLength(10);
+    expect(forecast.map((day) => day.localDate)).toEqual(localDates);
+    expect(forecast.every((day) => day.state === "match")).toBe(true);
+  });
+
   it("keeps a covered date as incomplete when only its sunset is missing", () => {
     // Provider days 2026-07-03 and 2026-07-05 carry the sunsets of Eastern
     // July 2 and July 4. The July 4 provider day (Eastern July 3 sunset) is

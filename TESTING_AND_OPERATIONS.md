@@ -227,20 +227,25 @@ Deployment runs only after required checks pass on the default branch.
 
 ## 11. Deployment checklist
 
-- [ ] Production build completes with no warnings requiring action.
-- [ ] All required CI checks pass.
-- [ ] Bundle sizes remain within budget.
-- [ ] API URLs contain Sandbridge coordinates and metric options.
-- [ ] NOAA station is `8639428` and datum is `MLLW`.
-- [ ] Display timezone is fixed to `America/New_York`.
-- [ ] Open-Meteo and NOAA attribution is visible.
-- [ ] Safety and estimation language is present.
-- [ ] Official source links work.
-- [ ] Cache schema version is current.
+- [x] Production build completes with no warnings requiring action.
+- [x] All required CI-equivalent checks pass locally.
+- [x] Bundle sizes remain within budget.
+- [x] API URLs contain Sandbridge coordinates and metric options.
+- [x] NOAA station is `8639428` and datum is `MLLW`.
+- [x] Display timezone is fixed to `America/New_York`.
+- [x] Open-Meteo and NOAA attribution is visible.
+- [x] Safety and estimation language is present.
+- [x] Official source links work.
+- [x] Cache schema version is current.
 - [ ] Both tab URLs work on the static host.
-- [ ] A cache-busting deployment strategy is configured for application assets.
+- [x] A cache-busting deployment strategy is configured for application assets.
 - [ ] The HTML shell itself is not cached indefinitely.
-- [ ] Mobile, desktop, keyboard, and screen-reader smoke checks pass.
+- [x] Mobile, tablet, desktop, and keyboard smoke checks pass.
+- [ ] Production screen-reader and `200%` zoom smoke checks pass.
+
+The unchecked host-dependent items are completed after publication by following
+[DEPLOYMENT.md](DEPLOYMENT.md). The local prefixed-path deployment smoke check
+passes at `/beachview/`, including the direct Fishing query URL.
 
 ## 12. Post-release checks
 

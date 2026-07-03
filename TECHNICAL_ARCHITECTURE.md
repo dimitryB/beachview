@@ -307,9 +307,12 @@ Implementation tactics:
 
 ## 14. Deployment model
 
-The build output is static HTML, CSS, JavaScript, icons, and a manifest.
+The build output is static HTML, CSS, JavaScript, and icons. A web-app manifest
+and service worker remain deferred with the optional PWA work.
 
-GitHub Pages is the simplest target for a personal, noncommercial app. Vercel or Netlify can host the same static output, but no serverless function is required.
+GitHub Pages is the selected target for the initial personal, noncommercial
+release. Vercel or Netlify can host the same static output, but no serverless
+function is required.
 
 Deployment must:
 
@@ -318,5 +321,12 @@ Deployment must:
 - Use HTTPS.
 - Preserve the query-string view selection.
 - Expose attribution and source links in the deployed UI.
+
+The Pages workflow waits for successful default-branch CI, derives `/` for a
+user site or `/<repository>/` for a project site, builds with that Vite base
+path, and uploads only `dist/`. Hashed Vite assets provide cache busting. GitHub
+Pages owns response headers; a post-deployment smoke check rejects immutable
+HTML and verifies built assets plus the Fishing query URL. See
+[DEPLOYMENT.md](DEPLOYMENT.md).
 
 Free hosting and free API usage are policy- and quota-dependent; the documentation must not promise perpetual zero-cost operation.

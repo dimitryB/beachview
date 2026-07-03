@@ -339,35 +339,40 @@ update and stale-forecast failure modes before the first production release.
 
 ## Phase 7 — Release and deployment
 
+**Status: Release candidate ready — July 3, 2026 (repository-owner publication, production smoke checks, and manual screen-reader/zoom sign-off remain)**
+
 ### Step 32: Complete release testing
 
-- [ ] Run all unit, component, and browser tests.
-- [ ] Complete the time-zone test matrix.
-- [ ] Capture required mobile, tablet, and desktop screenshots.
-- [ ] Complete manual keyboard and screen-reader checks.
-- [ ] Compare NOAA events against the official station page.
+- [x] Run all unit, component, and browser tests.
+- [x] Complete the time-zone test matrix.
+- [x] Capture required mobile, tablet, and desktop screenshots.
+- [x] Complete keyboard-flow checks.
+- [ ] Complete repository-owner screen-reader and `200%` zoom checks.
+- [x] Compare NOAA events against the official station page.
 
 ### Step 33: Configure static hosting
 
-- [ ] Choose GitHub Pages or another eligible free personal-project host.
-- [ ] Configure base path and asset URLs.
-- [ ] Configure HTTPS and cache headers where supported.
-- [ ] Verify direct URLs with query-string view selection.
+- [x] Choose GitHub Pages as the eligible free personal-project host.
+- [x] Configure automatic root/project base paths and asset URLs.
+- [x] Document GitHub Pages HTTPS and host-managed cache behavior.
+- [ ] Enable and verify HTTPS on the published repository.
+- [x] Verify direct URLs with query-string view selection locally.
 
 ### Step 34: Deploy
 
-- [ ] Build from a clean locked install.
-- [ ] Publish only the generated static output.
-- [ ] Run post-deployment smoke checks.
-- [ ] Record the release date and source/provider terms reviewed.
+- [x] Build from a clean locked install.
+- [x] Configure the workflow to publish only generated `dist/` output.
+- [ ] Publish from the repository-owner GitHub account.
+- [ ] Run production post-deployment smoke checks.
+- [x] Record the release-candidate date and source/provider terms reviewed.
 
 ### Step 35: Establish maintenance
 
-- [ ] Enable dependency update notifications.
-- [ ] Schedule monthly provider contract checks.
-- [ ] Review thresholds before each swimming season.
-- [ ] Track provider quota or policy changes.
-- [ ] Keep a short release log.
+- [x] Enable weekly dependency update notifications.
+- [x] Schedule monthly provider contract checks.
+- [x] Record threshold review before each swimming season.
+- [x] Track provider quota or policy changes in the maintenance checklist.
+- [x] Keep a short release log.
 
 ### Phase 7 exit criteria
 
@@ -375,6 +380,11 @@ update and stale-forecast failure modes before the first production release.
 - Both tabs work on mobile and desktop.
 - Live Sandbridge values, tide predictions, attribution, and source links are correct.
 - The project has an owner and maintenance cadence.
+
+The implementation-side Phase 7 work is complete. The production URL exit
+criteria remain open until the repository owner follows
+[DEPLOYMENT.md](DEPLOYMENT.md), publishes the site, and records the production
+checks.
 
 ## 3. Suggested milestone grouping
 
