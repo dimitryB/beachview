@@ -4,7 +4,11 @@ import {
   calculateTideRanges,
 } from "@/domain/fishing";
 import { localDateForInstant } from "@/domain/time";
-import type { TideEvent, WeatherForecastHour } from "@/types/domain";
+import type {
+  OfficialAlert,
+  TideEvent,
+  WeatherForecastHour,
+} from "@/types/domain";
 
 function tideEvent(
   id: string,
@@ -39,6 +43,23 @@ function weatherHour(
     directRadiationWm2: 100,
     uvIndex: 2,
     ...overrides,
+  };
+}
+
+function officialAlert(
+  id: string,
+  effectiveAt: string,
+  expiresAt: string,
+): OfficialAlert {
+  return {
+    id,
+    headline: "High Surf Advisory",
+    severity: "Moderate",
+    effectiveAt,
+    expiresAt,
+    sourceUrl: "https://alerts.weather.gov/example",
+    source: "nws-alerts",
+    kind: "official-alert",
   };
 }
 
@@ -102,6 +123,124 @@ describe("fishing signals", () => {
 
     expect(window?.isCandidate).toBe(false);
     expect(window?.explanation).toContain("reaches");
+  });
+
+  it("does not call a window a candidate at the strong-gust boundary", () => {
+    const window = buildMovementWindows(
+      [low, high],
+      [
+        weatherHour("2026-07-02T15:00:00.000Z", {
+          windGustKmh: 50,
+        }),
+      ],
+    )[0];
+
+    expect(window?.isCandidate).toBe(false);
+    expect(window?.explanation).toContain("strong-gust threshold");
+  });
+
+  it("keeps a window a candidate just below the strong-gust boundary", () => {
+    const window = buildMovementWindows(
+      [low, high],
+      [
+        weatherHour("2026-07-02T15:00:00.000Z", {
+          windGustKmh: 49.9,
+        }),
+      ],
+    )[0];
+
+    expect(window?.isCandidate).toBe(true);
+    expect(window?.explanation).not.toContain("strong-gust threshold");
+  });
+
+  it("does not call a window a candidate when the gust is unavailable", () => {
+    const window = buildMovementWindows(
+      [low, high],
+      [
+        weatherHour("2026-07-02T15:00:00.000Z", {
+          windGustKmh: null,
+        }),
+      ],
+    )[0];
+
+    expect(window?.isCandidate).toBe(false);
+    expect(window?.explanation).toContain("gust is unavailable");
+  });
+
+  it("disqualifies a window that overlaps an official alert", () => {
+    // The movement window spans 14:00–16:00 around the 15:00 midpoint.
+    const window = buildMovementWindows(
+      [low, high],
+      [weatherHour("2026-07-02T15:00:00.000Z")],
+      [
+        officialAlert(
+          "surf",
+          "2026-07-02T14:30:00.000Z",
+          "2026-07-02T17:00:00.000Z",
+        ),
+      ],
+    )[0];
+
+    expect(window?.isCandidate).toBe(false);
+    expect(window?.explanation).toContain("official alert");
+    expect(window?.explanation).toContain("High Surf Advisory");
+  });
+
+  it("ignores an alert that expired before the window starts", () => {
+    const window = buildMovementWindows(
+      [low, high],
+      [weatherHour("2026-07-02T15:00:00.000Z")],
+      [
+        officialAlert(
+          "expired",
+          "2026-07-02T08:00:00.000Z",
+          "2026-07-02T13:00:00.000Z",
+        ),
+      ],
+    )[0];
+
+    expect(window?.isCandidate).toBe(true);
+    expect(window?.explanation).not.toContain("official alert");
+  });
+
+  it("ignores an alert that does not overlap the window", () => {
+    const window = buildMovementWindows(
+      [low, high],
+      [weatherHour("2026-07-02T15:00:00.000Z")],
+      [
+        officialAlert(
+          "later",
+          "2026-07-02T17:00:00.000Z",
+          "2026-07-02T20:00:00.000Z",
+        ),
+      ],
+    )[0];
+
+    expect(window?.isCandidate).toBe(true);
+    expect(window?.explanation).not.toContain("official alert");
+  });
+
+  it("reports a persistent frontal wind shift as one timeline entry", () => {
+    const weather: WeatherForecastHour[] = [];
+    for (let hour = 6; hour <= 20; hour += 1) {
+      weather.push(
+        weatherHour(`2026-07-02T${String(hour).padStart(2, "0")}:00:00.000Z`, {
+          windDirectionDeg: hour < 14 ? 350 : 80,
+        }),
+      );
+    }
+
+    const forecast = buildFishingForecast(
+      [],
+      weather,
+      "2026-07-02T06:00:00.000Z",
+    );
+    const shiftEntries = forecast
+      .flatMap((day) => day.timeline)
+      .filter((entry) => entry.kind === "wind-shift");
+
+    expect(shiftEntries).toHaveLength(1);
+    expect(shiftEntries[0]?.validAt).toBe("2026-07-02T14:00:00.000Z");
   });
 
   it("generates a chronological daily timeline", () => {

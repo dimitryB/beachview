@@ -48,7 +48,7 @@ a:hover {
 
 :focus-visible {
   border-radius: 4px;
-  outline: 3px solid var(--color-warning);
+  outline: var(--focus-ring);
   outline-offset: 3px;
 }
 
@@ -144,8 +144,7 @@ a:hover {
   font-size: 0.8125rem;
 }
 
-.scope-badge,
-.phase-badge {
+.scope-badge {
   display: inline-flex;
   align-items: center;
   min-height: 34px;
@@ -194,6 +193,16 @@ a:hover {
   opacity: 0.75;
 }
 
+.refresh-button:disabled span {
+  animation: refresh-spin 900ms linear infinite;
+}
+
+@keyframes refresh-spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
 .safety-notice {
   display: flex;
   align-items: center;
@@ -217,6 +226,34 @@ a:hover {
   gap: 10px 18px;
   font-size: 0.8125rem;
   font-weight: 700;
+}
+
+.offline-notice {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 12px 16px;
+  margin-top: var(--space-3);
+  color: var(--color-text);
+  background: rgb(242 184 91 / 10%);
+  border: 1px solid rgb(242 184 91 / 52%);
+  border-radius: var(--radius-control);
+}
+
+.offline-notice > span {
+  color: var(--color-warning);
+  font-size: 1.1rem;
+  font-weight: 900;
+}
+
+.offline-notice p {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.8125rem;
+}
+
+.offline-notice strong {
+  color: var(--color-text);
 }
 
 .primary-nav {
@@ -312,13 +349,55 @@ a:hover {
   border-radius: 12px;
 }
 
-.readiness-card__dot {
-  width: 10px;
-  height: 10px;
+.readiness-card__symbol {
+  display: inline-grid;
+  width: 26px;
+  height: 26px;
+  place-items: center;
   flex: 0 0 auto;
-  background: var(--color-positive);
   border-radius: 50%;
-  box-shadow: 0 0 0 5px rgb(77 213 146 / 12%);
+  color: var(--color-bg);
+  background: var(--color-positive);
+  font-size: 0.8rem;
+  font-weight: 900;
+}
+
+.readiness-card--danger {
+  border-color: rgb(255 104 120 / 48%);
+}
+
+.readiness-card--danger .readiness-card__symbol {
+  background: var(--color-danger);
+}
+
+.readiness-card--warning,
+.readiness-card--alert {
+  border-color: rgb(242 184 91 / 48%);
+}
+
+.readiness-card--warning .readiness-card__symbol,
+.readiness-card--alert .readiness-card__symbol {
+  background: var(--color-warning);
+}
+
+.readiness-card--unavailable {
+  border-style: dashed;
+  border-color: var(--color-text-muted);
+}
+
+.readiness-card--unavailable .readiness-card__symbol,
+.readiness-card--info .readiness-card__symbol {
+  color: var(--color-bg);
+  background: var(--color-info);
+}
+
+.readiness-card--info,
+.readiness-card--neutral {
+  border-color: rgb(119 220 231 / 34%);
+}
+
+.readiness-card--neutral .readiness-card__symbol {
+  background: var(--color-info);
 }
 
 .readiness-card strong,
@@ -408,6 +487,82 @@ a:hover {
   background: var(--color-danger);
 }
 
+.provider-notice-stack {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.provider-notice-stack:not(:empty) {
+  margin: -4px 0 var(--space-4);
+}
+
+.provider-notice {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 12px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+}
+
+.provider-notice--stale {
+  background: rgb(242 184 91 / 8%);
+  border-color: rgb(242 184 91 / 42%);
+}
+
+.provider-notice--error {
+  background: rgb(255 104 120 / 7%);
+  border-color: rgb(255 104 120 / 42%);
+}
+
+.provider-notice__icon {
+  color: var(--color-warning);
+  font-weight: 900;
+}
+
+.provider-notice--error .provider-notice__icon {
+  color: var(--color-danger);
+}
+
+.provider-notice strong,
+.provider-notice div > span {
+  display: block;
+}
+
+.provider-notice strong {
+  font-size: 0.8125rem;
+}
+
+.provider-notice div > span {
+  margin-top: 2px;
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.provider-notice__retry {
+  min-width: 64px;
+  min-height: 44px;
+  padding: 8px 12px;
+  color: var(--color-text);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.provider-notice__retry:hover:not(:disabled) {
+  border-color: var(--color-accent);
+}
+
+.provider-notice__retry:disabled {
+  cursor: wait;
+  opacity: 0.68;
+}
+
 .condition-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -415,9 +570,15 @@ a:hover {
 }
 
 .condition-card {
-  min-height: 154px;
+  min-height: 238px;
   padding: 18px;
   background: var(--color-surface-raised);
+}
+
+.condition-card--featured {
+  background:
+    linear-gradient(145deg, rgb(73 198 213 / 8%), transparent 58%),
+    var(--color-surface-raised);
 }
 
 .condition-card--stale {
@@ -428,8 +589,24 @@ a:hover {
   border-color: rgb(255 104 120 / 42%);
 }
 
-.condition-card:last-child:nth-child(odd) {
-  grid-column: 1 / -1;
+.condition-card--tone-danger {
+  border-color: rgb(255 104 120 / 58%);
+}
+
+.condition-card--tone-warning,
+.condition-card--tone-alert {
+  border-color: rgb(242 184 91 / 58%);
+}
+
+.condition-card--tone-unavailable {
+  border-style: dashed;
+}
+
+.condition-card__heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-2);
 }
 
 .condition-card__label {
@@ -439,6 +616,50 @@ a:hover {
   font-weight: 800;
   letter-spacing: 0.1em;
   text-transform: uppercase;
+}
+
+.condition-state {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  gap: 5px;
+  padding: 4px 8px;
+  color: var(--color-text-muted);
+  background: rgb(7 19 31 / 42%);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  font-size: 0.65rem;
+  font-weight: 800;
+  line-height: 1.15;
+  text-align: right;
+}
+
+.condition-state > span {
+  font-weight: 900;
+}
+
+.condition-state--danger {
+  color: var(--color-danger);
+  border-color: rgb(255 104 120 / 52%);
+}
+
+.condition-state--warning,
+.condition-state--alert {
+  color: var(--color-warning);
+  border-color: rgb(242 184 91 / 52%);
+}
+
+.condition-state--neutral {
+  color: var(--color-info);
+  border-color: rgb(119 220 231 / 40%);
+}
+
+.condition-state--info {
+  color: var(--color-info);
+}
+
+.condition-state--unavailable {
+  border-style: dashed;
 }
 
 .condition-card__value {
@@ -453,6 +674,32 @@ a:hover {
   font-variant-numeric: tabular-nums;
 }
 
+.condition-card__value--text {
+  align-items: center;
+  font-size: clamp(1.45rem, 3vw, 2rem);
+  line-height: 1.1;
+}
+
+.condition-card__skeleton {
+  width: min(120px, 80%);
+  height: 34px;
+  background: linear-gradient(
+    90deg,
+    rgb(166 186 198 / 10%),
+    rgb(166 186 198 / 22%),
+    rgb(166 186 198 / 10%)
+  );
+  background-size: 220% 100%;
+  border-radius: 7px;
+  animation: skeleton-shift 1.4s ease-in-out infinite;
+}
+
+@keyframes skeleton-shift {
+  to {
+    background-position-x: -220%;
+  }
+}
+
 .condition-card__unit {
   color: var(--color-text-muted);
   font-size: 0.875rem;
@@ -465,139 +712,32 @@ a:hover {
   line-height: 1.45;
 }
 
-.tide-placeholder {
-  position: relative;
-  overflow: hidden;
-  background: linear-gradient(180deg, rgb(73 198 213 / 4%), transparent);
-  border-radius: 10px;
-}
-
-.tide-placeholder svg {
-  display: block;
-  width: 100%;
-  min-height: 180px;
-}
-
-.tide-placeholder__fill {
-  fill: url("#tide-fill");
-}
-
-.tide-placeholder__line {
-  fill: none;
-  stroke: var(--color-accent);
-  stroke-dasharray: 8 10;
-  stroke-linecap: round;
-  stroke-width: 4;
-  vector-effect: non-scaling-stroke;
-}
-
-.tide-placeholder p {
-  position: absolute;
-  right: 16px;
-  bottom: 12px;
-  left: 16px;
-  margin: 0;
-  color: var(--color-text-muted);
+.condition-card__supporting {
+  margin: 8px 0 0;
+  color: var(--color-text);
   font-size: 0.75rem;
-  text-align: center;
+  line-height: 1.45;
 }
 
-.tide-events {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
-  padding: 0;
-  margin: 16px 0 0;
-  list-style: none;
-}
-
-.tide-events li {
-  display: grid;
-  min-width: 0;
-  gap: 5px;
-  padding: 12px;
-  background: var(--color-surface-raised);
-  border: 1px solid var(--color-border);
-  border-radius: 10px;
-}
-
-.tide-events strong {
-  font-size: 1rem;
-  font-variant-numeric: tabular-nums;
-}
-
-.tide-events li > span:last-child {
+.condition-card__meta {
+  padding-top: 9px;
+  margin: 10px 0 0;
   color: var(--color-text-muted);
-  font-size: 0.7rem;
-}
-
-.tide-events__type {
-  color: var(--color-accent-strong);
+  border-top: 1px solid rgb(166 186 198 / 12%);
   font-size: 0.68rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.tide-events__type--low {
-  color: var(--color-cold);
-}
-
-.forecast-strip {
-  display: grid;
-  grid-auto-columns: minmax(174px, 1fr);
-  grid-auto-flow: column;
-  gap: 12px;
-  max-width: 100%;
-  min-width: 0;
-  overflow-x: auto;
-  padding-bottom: 8px;
-  scroll-snap-type: x proximity;
-}
-
-.forecast-day {
-  min-height: 162px;
-  padding: 18px;
-  background: var(--color-surface-raised);
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
-  scroll-snap-align: start;
-}
-
-.forecast-day h3,
-.forecast-day p {
-  margin: 0;
-}
-
-.forecast-day h3 {
-  font-size: 0.875rem;
-}
-
-.forecast-day p {
-  margin-top: 22px;
-  color: var(--color-text-muted);
-  font-size: 0.75rem;
   line-height: 1.4;
 }
 
-.forecast-day__line {
-  display: block;
-  width: 78%;
-  height: 8px;
-  margin-top: 24px;
-  background: rgb(166 186 198 / 12%);
-  border-radius: var(--radius-pill);
-}
-
-.forecast-day__line--short {
-  width: 54%;
-  margin-top: 10px;
+.tide-events__empty {
+  margin: 16px 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.8125rem;
 }
 
 .site-footer {
   display: flex;
-  justify-content: space-between;
-  gap: 20px;
+  flex-direction: column;
+  gap: 12px;
   padding: 32px 4px 44px;
   color: var(--color-text-muted);
   font-size: 0.75rem;
@@ -607,8 +747,18 @@ a:hover {
   margin: 0;
 }
 
+.site-footer__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+}
+
 .site-footer__meta {
   text-align: right;
+}
+
+.site-footer__sources {
+  line-height: 1.5;
 }
 
 @media (min-width: 720px) {
@@ -618,15 +768,30 @@ a:hover {
   }
 
   .condition-grid {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .condition-grid--fishing {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
+}
 
-  .condition-card:last-child:nth-child(odd) {
-    grid-column: auto;
+@media (max-width: 479px) {
+  .condition-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .condition-card {
+    min-height: 218px;
+  }
+
+  .provider-notice {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .provider-notice__retry {
+    grid-column: 1 / -1;
+    width: 100%;
   }
 }
 
@@ -678,11 +843,7 @@ a:hover {
     flex-direction: column;
   }
 
-  .tide-events {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .site-footer {
+  .site-footer__row {
     flex-direction: column;
   }
 
@@ -698,10 +859,608 @@ a:hover {
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
   }
+
+  .condition-card__skeleton,
+  .refresh-button:disabled span {
+    animation: none;
+  }
 }
 
 @media (forced-colors: active) {
-  .readiness-card__dot {
+  .readiness-card__symbol {
     forced-color-adjust: none;
   }
+}
+
+/* ------------------------------------------------------------------ */
+/* Tide chart (Step 22): estimated curve, high/low markers, current-  */
+/* time rule, phase summary, and event table. The SVG stays           */
+/* responsive through a measured viewBox with width: 100%; the        */
+/* rendered height is ~220px on narrow layouts and 260px from ~768px  */
+/* viewports up. No transitions or animations are attached here: the  */
+/* tracking point moves in discrete once-per-minute steps, which also */
+/* satisfies prefers-reduced-motion.                                  */
+/* ------------------------------------------------------------------ */
+
+.tide-chart {
+  overflow: hidden;
+  background: linear-gradient(180deg, rgb(73 198 213 / 4%), transparent);
+  border-radius: 10px;
+}
+
+.tide-chart svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.tide-chart text {
+  fill: var(--color-text-muted);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.tide-chart__axis-unit {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.tide-chart__grid {
+  stroke: var(--color-border);
+  stroke-width: 1;
+}
+
+.tide-chart__area {
+  fill: var(--color-accent);
+  opacity: 0.16;
+}
+
+.tide-chart__line {
+  fill: none;
+  stroke: var(--color-accent);
+  stroke-linecap: round;
+  stroke-width: 2.5;
+}
+
+.tide-chart__marker circle {
+  fill: var(--color-surface);
+  stroke: var(--color-accent-strong);
+  stroke-width: 2;
+}
+
+.tide-chart__marker text {
+  fill: var(--color-text);
+  font-weight: 700;
+}
+
+/* The current-time rule is dashed and brighter than the estimated
+   curve so the two stay distinguishable without relying on color. */
+.tide-chart__now-rule {
+  stroke: var(--color-accent-strong);
+  stroke-dasharray: 3 4;
+  stroke-width: 1.5;
+}
+
+.tide-chart__now-point {
+  fill: var(--color-accent-strong);
+  stroke: var(--color-bg);
+  stroke-width: 2;
+}
+
+.tide-chart__now-label {
+  fill: var(--color-accent-strong);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.tide-chart__empty {
+  padding: 40px 16px;
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.8125rem;
+  text-align: center;
+}
+
+.tide-chart__summary {
+  margin: 0 0 14px;
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+  line-height: 1.55;
+}
+
+.tide-chart__summary strong {
+  color: var(--color-text);
+}
+
+.tide-table {
+  width: 100%;
+  margin-top: 16px;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+}
+
+.tide-table th,
+.tide-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid rgb(166 186 198 / 14%);
+  text-align: left;
+}
+
+.tide-table thead th {
+  color: var(--color-text-muted);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.tide-table tbody th {
+  font-weight: 700;
+}
+
+.tide-table td {
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+}
+
+/*
+ * Swimming ten-day outlook (SwimmingOutlook, roadmap Step 23).
+ * Mobile-first: a horizontally scrollable snap region whose next card peeks
+ * past the panel edge as the visible continuation cue; the region itself is
+ * focusable so it stays keyboard scrollable. Vertical gestures pass through
+ * because only the x axis scrolls. At >=768px the strip becomes a static
+ * grid. Match cards borrow --color-positive; incomplete cards reuse the
+ * dashed "unavailable" treatment from UX_DESIGN §5.1.
+ */
+.swim-outlook__meta {
+  margin: -8px 0 16px;
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.swim-outlook__scroller {
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+}
+
+.swim-outlook__list {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: min(248px, 78%);
+  gap: 12px;
+  padding: 0 0 8px;
+  margin: 0;
+  list-style: none;
+}
+
+.swim-day {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 252px;
+  gap: 10px;
+  padding: 16px;
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  scroll-snap-align: start;
+}
+
+.swim-day--match {
+  border-color: rgb(77 213 146 / 55%);
+  box-shadow: inset 0 0 0 1px rgb(77 213 146 / 30%);
+}
+
+.swim-day--incomplete {
+  border-style: dashed;
+}
+
+.swim-day__title {
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+.swim-day__state {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.swim-day__state--match {
+  color: var(--color-positive);
+}
+
+.swim-day__state--no-match,
+.swim-day__state--incomplete {
+  color: var(--color-text-muted);
+}
+
+.swim-day__window {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.swim-day__note {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
+.swim-day__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.swim-chip {
+  padding: 3px 9px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  font-size: 0.68rem;
+  line-height: 1.4;
+}
+
+.swim-chip--reason {
+  color: var(--color-positive);
+  border-color: rgb(77 213 146 / 45%);
+}
+
+.swim-chip--warning {
+  color: var(--color-warning);
+  border-color: rgb(242 184 91 / 45%);
+}
+
+.swim-day__metrics {
+  display: grid;
+  gap: 6px;
+  margin: auto 0 0;
+}
+
+.swim-day__metric {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.78rem;
+}
+
+.swim-day__metric dt {
+  color: var(--color-text-muted);
+}
+
+.swim-day__metric dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Loading skeletons match the final card dimensions to avoid layout shift. */
+.swim-day__skeleton-bar {
+  display: block;
+  width: 68%;
+  height: 12px;
+  background: linear-gradient(
+    90deg,
+    rgb(166 186 198 / 10%),
+    rgb(166 186 198 / 22%),
+    rgb(166 186 198 / 10%)
+  );
+  background-size: 220% 100%;
+  border-radius: var(--radius-pill);
+  animation: skeleton-shift 1.4s ease-in-out infinite;
+}
+
+.swim-day__skeleton-bar--title {
+  width: 42%;
+  height: 14px;
+}
+
+.swim-day__skeleton-bar--wide {
+  width: 88%;
+  height: 34px;
+}
+
+.swim-day--skeleton .swim-day__skeleton-bar:last-child {
+  margin-top: auto;
+}
+
+.swim-outlook__unavailable {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-card);
+}
+
+.swim-outlook__unavailable p {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.swim-outlook__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+@media (min-width: 768px) {
+  .swim-outlook__scroller {
+    overflow: visible;
+  }
+
+  .swim-outlook__list {
+    grid-auto-flow: row;
+    grid-auto-columns: unset;
+    grid-template-columns: repeat(auto-fill, minmax(196px, 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .swim-day__skeleton-bar {
+    animation: none;
+  }
+}
+
+/*
+ * Fishing ten-day outlook (FishingOutlook, roadmap Step 24).
+ * Mobile-first: each local day is a group whose entries form a vertical
+ * chronological timeline (time column + entry body), so the page only ever
+ * scrolls vertically and stays inside 320px. At >=1024px the day groups
+ * become a compact grid per UX_DESIGN §8. Candidate movement periods borrow
+ * the --color-positive treatment from the swim outlook; non-candidate
+ * periods stay informational (muted, no highlight) so an official-alert
+ * overlap never reads as a favorable state.
+ */
+.fishing-outlook__meta {
+  margin: -8px 0 16px;
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.fishing-outlook__days {
+  display: grid;
+  gap: 16px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.fishing-day {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 8px;
+  padding: 16px;
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+}
+
+.fishing-day__title {
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+.fishing-day__range {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.fishing-day__note {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
+.fishing-day__timeline {
+  display: grid;
+  gap: 12px;
+  padding: 0;
+  margin: 4px 0 0;
+  list-style: none;
+}
+
+.fishing-entry {
+  display: grid;
+  grid-template-columns: 68px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+}
+
+.fishing-entry__time {
+  padding-top: 2px;
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.fishing-entry__body {
+  display: grid;
+  min-width: 0;
+  gap: 5px;
+}
+
+.fishing-entry--movement .fishing-entry__body {
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: rgb(166 186 198 / 5%);
+}
+
+.fishing-entry--candidate .fishing-entry__body {
+  border-color: rgb(77 213 146 / 55%);
+  box-shadow: inset 0 0 0 1px rgb(77 213 146 / 30%);
+}
+
+.fishing-entry__title {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+.fishing-entry__detail {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.fishing-entry__window {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.fishing-entry__state {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.fishing-entry__state--candidate {
+  color: var(--color-positive);
+}
+
+.fishing-entry__state--info {
+  color: var(--color-text-muted);
+}
+
+.fishing-entry__reasons {
+  display: grid;
+  gap: 3px;
+  padding: 0;
+  margin: 0;
+  font-size: 0.74rem;
+  list-style: none;
+}
+
+.fishing-entry__reasons li {
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.fishing-entry__note {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.7rem;
+  line-height: 1.45;
+}
+
+/* Loading skeletons match the final group dimensions to avoid layout shift. */
+.fishing-day--skeleton {
+  min-height: 148px;
+  gap: 12px;
+}
+
+.fishing-day__skeleton-bar {
+  display: block;
+  width: 82%;
+  height: 12px;
+  background: linear-gradient(
+    90deg,
+    rgb(166 186 198 / 10%),
+    rgb(166 186 198 / 22%),
+    rgb(166 186 198 / 10%)
+  );
+  background-size: 220% 100%;
+  border-radius: var(--radius-pill);
+  animation: skeleton-shift 1.4s ease-in-out infinite;
+}
+
+.fishing-day__skeleton-bar--title {
+  width: 38%;
+  height: 14px;
+}
+
+.fishing-outlook__unavailable {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-card);
+}
+
+.fishing-outlook__unavailable p {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.fishing-outlook__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+@media (min-width: 1024px) {
+  .fishing-outlook__days {
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    align-items: start;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fishing-day__skeleton-bar {
+    animation: none;
+  }
+}
+
+/*
+ * Stale-data demotion for the outlook sections (DATA_AND_RULES §14: a
+ * missing/stale data warning outranks a matching comfort/fishing window).
+ * When a required feed is stale, the favorable --color-positive treatment
+ * is swapped for the shared --color-warning tone: derived windows stay
+ * listed, but they no longer read as current recommendations.
+ */
+.outlook-stale-notice {
+  margin: 0 0 16px;
+  padding: 10px 12px;
+  border: 1px solid rgb(242 184 91 / 45%);
+  border-radius: 12px;
+  color: var(--color-warning);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.swim-day--stale-match {
+  border-color: rgb(242 184 91 / 45%);
+  box-shadow: inset 0 0 0 1px rgb(242 184 91 / 25%);
+}
+
+.fishing-entry--stale-candidate .fishing-entry__body {
+  border-color: rgb(242 184 91 / 45%);
+  box-shadow: inset 0 0 0 1px rgb(242 184 91 / 25%);
+}
+
+.swim-day__state--stale,
+.fishing-entry__state--stale {
+  color: var(--color-warning);
 }

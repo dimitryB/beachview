@@ -12,7 +12,8 @@ export interface ComfortAssessment {
     | "water-temperature"
     | "wind"
     | "uv"
-    | "direct-radiation";
+    | "direct-radiation"
+    | "exposure";
   tone: ComfortTone;
   label: string;
   explanation: string;
@@ -230,7 +231,80 @@ export function assessDirectRadiation(
   };
 }
 
-const TONE_PRIORITY: Record<ComfortTone, number> = {
+export function assessExposure(
+  uvIndex: number | null,
+  directRadiationWm2: number | null,
+  cloudCoverPct: number | null,
+  validAt: string,
+): ComfortAssessment {
+  const uv = assessUv(uvIndex);
+  const radiation = assessDirectRadiation(directRadiationWm2, validAt);
+
+  if (radiation.tone === "warning") {
+    return { ...radiation, metric: "exposure" };
+  }
+
+  if (uv.tone === "warning") {
+    return { ...uv, metric: "exposure" };
+  }
+
+  if (
+    uvIndex === null &&
+    directRadiationWm2 === null &&
+    cloudCoverPct === null
+  ) {
+    return unavailable("exposure", "Sun-exposure");
+  }
+
+  if (
+    cloudCoverPct !== null &&
+    Number.isFinite(cloudCoverPct) &&
+    cloudCoverPct >= SWIM_RULES.lowerExposureCloudCoverAtLeastPct
+  ) {
+    return {
+      metric: "exposure",
+      tone: "neutral",
+      label: "Overcast",
+      explanation: `Cloud cover is at or above ${SWIM_RULES.lowerExposureCloudCoverAtLeastPct}%.`,
+    };
+  }
+
+  if (
+    uvIndex !== null &&
+    Number.isFinite(uvIndex) &&
+    uvIndex <= SWIM_RULES.lowerExposureUvAtMost
+  ) {
+    return {
+      metric: "exposure",
+      tone: "neutral",
+      label: "Lower UV",
+      explanation: `UV index is at or below ${SWIM_RULES.lowerExposureUvAtMost}.`,
+    };
+  }
+
+  if (
+    directRadiationWm2 !== null &&
+    Number.isFinite(directRadiationWm2) &&
+    directRadiationWm2 <= SWIM_RULES.lowerExposureRadiationAtMostWm2
+  ) {
+    return {
+      metric: "exposure",
+      tone: "neutral",
+      label: "Lower direct sun",
+      explanation: `Direct radiation is at or below ${SWIM_RULES.lowerExposureRadiationAtMostWm2} W/m².`,
+    };
+  }
+
+  return {
+    metric: "exposure",
+    tone: "neutral",
+    label: "Moderate exposure",
+    explanation:
+      "No configured strong UV or direct midday exposure warning is triggered.",
+  };
+}
+
+export const TONE_PRIORITY: Record<ComfortTone, number> = {
   unavailable: 5,
   danger: 4,
   warning: 3,
@@ -262,5 +336,134 @@ export function assessSwimConditions(
       highest.tone === "neutral"
         ? "No configured comfort warning is triggered."
         : highest.label,
+  };
+}
+
+export interface SwimmingSummaryInput {
+  waveHeightM: number | null;
+  wavePeriodS: number | null;
+  waterTemperatureC: number | null;
+  windSpeedKmh: number | null;
+  windGustKmh: number | null;
+  uvIndex: number | null;
+  directRadiationWm2: number | null;
+  cloudCoverPct: number | null;
+  validAt: string;
+  hasCoreData: boolean;
+  hasStaleData: boolean;
+}
+
+export interface SwimmingCardAssessments {
+  water: ComfortAssessment;
+  waves: ComfortAssessment;
+  period: ComfortAssessment;
+  wind: ComfortAssessment;
+  exposure: ComfortAssessment;
+}
+
+export interface SwimmingReadiness {
+  tone: ComfortTone;
+  label: string;
+  detail: string;
+}
+
+export interface SwimmingSummary {
+  cards: SwimmingCardAssessments;
+  flags: ComfortAssessment[];
+  readiness: SwimmingReadiness;
+}
+
+const NOT_A_SAFETY_DETERMINATION = "Not a safety determination.";
+
+const NEUTRAL_READINESS_DETAIL =
+  "Comfort rules do not replace official guidance or beach conditions.";
+
+function isFlagTone(tone: ComfortTone): boolean {
+  return tone === "danger" || tone === "warning" || tone === "alert";
+}
+
+function flagsDetail(flags: ComfortAssessment[]): string {
+  return flags.length > 0
+    ? `${flags.map((flag) => flag.label).join(" · ")}. ${NOT_A_SAFETY_DETERMINATION}`
+    : NEUTRAL_READINESS_DETAIL;
+}
+
+export function deriveSwimmingSummary(
+  input: SwimmingSummaryInput,
+): SwimmingSummary {
+  const cards: SwimmingCardAssessments = {
+    water: assessWaterTemperature(input.waterTemperatureC),
+    waves: assessWaveHeight(input.waveHeightM),
+    period: assessWavePeriod(input.wavePeriodS),
+    wind: assessWind(input.windSpeedKmh, input.windGustKmh),
+    exposure: assessExposure(
+      input.uvIndex,
+      input.directRadiationWm2,
+      input.cloudCoverPct,
+      input.validAt,
+    ),
+  };
+  const assessments = [
+    cards.water,
+    cards.waves,
+    cards.period,
+    cards.wind,
+    cards.exposure,
+  ];
+  const flags = assessments
+    .filter((assessment) => isFlagTone(assessment.tone))
+    .sort(
+      (left, right) => TONE_PRIORITY[right.tone] - TONE_PRIORITY[left.tone],
+    );
+
+  // Missing data outranks every favorable or flagged state (DATA_AND_RULES §14).
+  const hasIncompleteAssessment = assessments.some(
+    (assessment) => assessment.tone === "unavailable",
+  );
+  if (!input.hasCoreData || hasIncompleteAssessment) {
+    return {
+      cards,
+      flags,
+      readiness: {
+        tone: "unavailable",
+        label: "Current comfort data is incomplete",
+        detail: `One or more required comfort inputs are unavailable. ${NOT_A_SAFETY_DETERMINATION}`,
+      },
+    };
+  }
+
+  // Stale-data warning outranks red rules and comfort flags (DATA_AND_RULES §14).
+  if (input.hasStaleData) {
+    return {
+      cards,
+      flags,
+      readiness: {
+        tone: "warning",
+        label: "Using cached current conditions",
+        detail: flagsDetail(flags),
+      },
+    };
+  }
+
+  if (flags.length > 0) {
+    return {
+      cards,
+      flags,
+      readiness: {
+        tone: flags[0].tone,
+        label: `${flags.length} configured comfort ${flags.length === 1 ? "flag" : "flags"}`,
+        detail: flagsDetail(flags),
+      },
+    };
+  }
+
+  return {
+    cards,
+    flags,
+    readiness: {
+      tone: "neutral",
+      label: "No configured comfort warning triggered",
+      detail: NEUTRAL_READINESS_DETAIL,
+    },
   };
 }

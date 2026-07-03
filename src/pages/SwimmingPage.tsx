@@ -1,24 +1,91 @@
-import { ConditionCard } from "@/components/conditions/ConditionCard";
+import {
+  ConditionCard,
+  type ConditionAssessment,
+} from "@/components/conditions/ConditionCard";
 import { DataStatus } from "@/components/conditions/DataStatus";
-import { ForecastPlaceholder } from "@/components/forecast/ForecastPlaceholder";
-import { formatNumber } from "@/components/format";
-import { TidePlaceholder } from "@/components/tide/TidePlaceholder";
+import { ProviderNotice } from "@/components/conditions/ProviderNotice";
+import { SwimmingOutlook } from "@/components/forecast/SwimmingOutlook";
+import { formatEasternValidTime, formatNumber } from "@/components/format";
+import { TideChart } from "@/components/tide/TideChart";
+import { deriveSwimmingSummary } from "@/domain/comfort";
+import { findClosestWeatherHour } from "@/domain/weather";
+import { degreesToCardinal } from "@/domain/wind";
 import type { BeachDataState } from "@/types/domain";
 
 interface SwimmingPageProps {
   data: BeachDataState;
+  onRetryMarine: () => void;
+  onRetryTides: () => void;
+  onRetryWeather: () => void;
 }
 
-export function SwimmingPage({ data }: SwimmingPageProps) {
-  const weather = data.weather.data?.current;
-  const marine = data.marine.data?.current;
-  const windDescription =
-    weather?.windDirectionDeg.value !== null &&
-    weather?.windDirectionDeg.value !== undefined
-      ? `From ${formatNumber(weather.windDirectionDeg.value, 0)}° · Gust ${
-          formatNumber(weather.windGustKmh.value) ?? "unavailable"
-        } km/h`
-      : "Sustained speed, direction, and gust";
+const MODELED_ASSESSMENT: ConditionAssessment = {
+  tone: "info",
+  label: "Modeled",
+  explanation: "Open-Meteo modeled value.",
+};
+
+function modeledMeta(
+  label: string,
+  validAt: string | undefined,
+): string | undefined {
+  return validAt
+    ? `${label} modeled · valid ${formatEasternValidTime(validAt)}`
+    : undefined;
+}
+
+export function SwimmingPage({
+  data,
+  onRetryMarine,
+  onRetryTides,
+  onRetryWeather,
+}: SwimmingPageProps) {
+  const weatherData = data.weather.data;
+  const marineData = data.marine.data;
+  const weather = weatherData?.current;
+  const marine = marineData?.current;
+  const exposureHour =
+    weatherData && weather
+      ? findClosestWeatherHour(
+          weather.airTemperatureC.validAt,
+          weatherData.hourly,
+        )
+      : null;
+  const { cards, readiness } = deriveSwimmingSummary({
+    waveHeightM: marine?.waveHeightM.value ?? null,
+    wavePeriodS: marine?.wavePeriodS.value ?? null,
+    waterTemperatureC: marine?.seaSurfaceTemperatureC.value ?? null,
+    windSpeedKmh: weather?.windSpeedKmh.value ?? null,
+    windGustKmh: weather?.windGustKmh.value ?? null,
+    uvIndex: exposureHour?.uvIndex ?? null,
+    directRadiationWm2: exposureHour?.directRadiationWm2 ?? null,
+    cloudCoverPct:
+      exposureHour?.cloudCoverPct ?? weather?.cloudCoverPct.value ?? null,
+    validAt: exposureHour?.validAt ?? weather?.airTemperatureC.validAt ?? "",
+    hasCoreData: Boolean(weatherData && marineData),
+    hasStaleData:
+      data.weather.status === "stale" || data.marine.status === "stale",
+  });
+  const direction = weather?.windDirectionDeg.value ?? null;
+  const cardinal = direction === null ? null : degreesToCardinal(direction);
+  const windSupporting =
+    direction === null
+      ? "Direction unavailable"
+      : `Wind from ${cardinal ?? "unknown"} (${formatNumber(direction, 0)}°) · gust ${
+          formatNumber(weather?.windGustKmh.value ?? null) ?? "unavailable"
+        } km/h`;
+  const exposureValue =
+    exposureHour?.uvIndex !== null && exposureHour?.uvIndex !== undefined
+      ? `UV ${formatNumber(exposureHour.uvIndex, 1)}`
+      : exposureHour?.cloudCoverPct !== null &&
+          exposureHour?.cloudCoverPct !== undefined
+        ? `${formatNumber(exposureHour.cloudCoverPct, 0)}% cloud`
+        : null;
+  const exposureSupporting = exposureHour
+    ? `Cloud ${formatNumber(exposureHour.cloudCoverPct, 0) ?? "unavailable"}% · direct radiation ${
+        formatNumber(exposureHour.directRadiationWm2, 0) ?? "unavailable"
+      } W/m²`
+    : undefined;
 
   return (
     <div className="view-stack">
@@ -33,17 +100,22 @@ export function SwimmingPage({ data }: SwimmingPageProps) {
             window at Sandbridge.
           </p>
         </div>
-        <div className="readiness-card" role="status">
-          <span className="readiness-card__dot" aria-hidden="true" />
+        <div
+          className={`readiness-card readiness-card--${readiness.tone}`}
+          role="status"
+        >
+          <span className="readiness-card__symbol" aria-hidden="true">
+            {readiness.tone === "danger"
+              ? "!"
+              : readiness.tone === "warning" || readiness.tone === "alert"
+                ? "△"
+                : readiness.tone === "unavailable"
+                  ? "—"
+                  : "○"}
+          </span>
           <div>
-            <strong>
-              {data.weather.data && data.marine.data
-                ? "Live Sandbridge feeds connected"
-                : "Connecting live Sandbridge feeds"}
-            </strong>
-            <span>
-              Derived comfort rules are ready; visual flags expand in Phase 3.
-            </span>
+            <strong>{readiness.label}</strong>
+            <span>{readiness.detail}</span>
           </div>
         </div>
       </section>
@@ -59,47 +131,96 @@ export function SwimmingPage({ data }: SwimmingPageProps) {
             <DataStatus label="Marine" state={data.marine} />
           </div>
         </div>
+        <div className="provider-notice-stack">
+          <ProviderNotice
+            label="weather"
+            onRetry={onRetryWeather}
+            state={data.weather}
+          />
+          <ProviderNotice
+            label="marine"
+            onRetry={onRetryMarine}
+            state={data.marine}
+          />
+        </div>
         <div className="condition-grid">
           <ConditionCard
-            description="Modeled sea-surface temperature"
+            assessment={cards.water}
+            description={cards.water.explanation}
+            featured
             label="Water"
+            meta={modeledMeta(
+              "Open-Meteo Marine",
+              marine?.seaSurfaceTemperatureC.validAt,
+            )}
             status={data.marine.status}
             unit="°C"
             value={formatNumber(marine?.seaSurfaceTemperatureC.value ?? null)}
           />
           <ConditionCard
-            description="Modeled near-shore air temperature"
+            assessment={MODELED_ASSESSMENT}
+            description="Modeled near-shore air temperature."
+            featured
             label="Air"
+            meta={modeledMeta(
+              "Open-Meteo Weather",
+              weather?.airTemperatureC.validAt,
+            )}
             status={data.weather.status}
             unit="°C"
             value={formatNumber(weather?.airTemperatureC.value ?? null)}
           />
           <ConditionCard
-            description="Significant wave height"
+            assessment={cards.waves}
+            description={cards.waves.explanation}
             label="Waves"
+            meta={modeledMeta("Open-Meteo Marine", marine?.waveHeightM.validAt)}
             status={data.marine.status}
             unit="m"
             value={formatNumber(marine?.waveHeightM.value ?? null, 2)}
           />
           <ConditionCard
-            description="Mean wave period"
+            assessment={cards.period}
+            description={cards.period.explanation}
             label="Period"
+            meta={modeledMeta("Open-Meteo Marine", marine?.wavePeriodS.validAt)}
             status={data.marine.status}
             unit="s"
             value={formatNumber(marine?.wavePeriodS.value ?? null, 1)}
           />
           <ConditionCard
-            description={windDescription}
+            assessment={cards.wind}
+            description={cards.wind.explanation}
             label="Wind"
+            meta={modeledMeta(
+              "Open-Meteo Weather",
+              weather?.windSpeedKmh.validAt,
+            )}
             status={data.weather.status}
+            supportingText={windSupporting}
             unit="km/h"
             value={formatNumber(weather?.windSpeedKmh.value ?? null)}
+          />
+          <ConditionCard
+            assessment={cards.exposure}
+            description={cards.exposure.explanation}
+            label="Exposure"
+            meta={modeledMeta("Open-Meteo Weather", exposureHour?.validAt)}
+            status={data.weather.status}
+            supportingText={exposureSupporting}
+            value={exposureValue}
+            valueStyle="text"
           />
         </div>
       </section>
 
-      <TidePlaceholder tides={data.tides} />
-      <ForecastPlaceholder marine={data.marine} weather={data.weather} />
+      <TideChart onRetry={onRetryTides} tides={data.tides} />
+      <SwimmingOutlook
+        marine={data.marine}
+        onRetryMarine={onRetryMarine}
+        onRetryWeather={onRetryWeather}
+        weather={data.weather}
+      />
     </div>
   );
 }

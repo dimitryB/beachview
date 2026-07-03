@@ -34,6 +34,30 @@ export function formatEasternDateTime(instant: string): string {
   }).format(new Date(instant));
 }
 
+export function formatEasternValidTime(instant: string): string {
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone: BEACH.timezone,
+    hour: "numeric",
+    minute: "2-digit",
+    timeZoneName: "short",
+  }).format(new Date(instant));
+}
+
+export function formatDurationMinutes(minutes: number | null): string | null {
+  if (minutes === null || !Number.isFinite(minutes) || minutes < 0) {
+    return null;
+  }
+
+  const roundedMinutes = Math.round(minutes);
+  if (roundedMinutes < 60) {
+    return `${roundedMinutes} min`;
+  }
+
+  const hours = Math.floor(roundedMinutes / 60);
+  const remainder = roundedMinutes % 60;
+  return remainder === 0 ? `${hours} h` : `${hours} h ${remainder} min`;
+}
+
 export function formatRelativeAge(
   instant: string,
   currentTime: number,

@@ -9,13 +9,18 @@ import {
   instantMilliseconds,
   localDateForInstant,
 } from "@/domain/time";
+import { findClosestWeatherHour } from "@/domain/weather";
 import {
   degreesToCardinal,
   findMeaningfulWindShifts,
   type CardinalDirection,
   type WindShift,
 } from "@/domain/wind";
-import type { TideEvent, WeatherForecastHour } from "@/types/domain";
+import type {
+  OfficialAlert,
+  TideEvent,
+  WeatherForecastHour,
+} from "@/types/domain";
 
 export type EstimatedTideDirection = "incoming" | "outgoing";
 
@@ -103,36 +108,6 @@ export function calculateTideRanges(events: readonly TideEvent[]): TideRange[] {
   return ranges;
 }
 
-export function findClosestWeatherHour(
-  instant: string,
-  hours: readonly WeatherForecastHour[],
-): WeatherForecastHour | null {
-  const target = instantMilliseconds(instant);
-  if (target === null) {
-    return null;
-  }
-
-  let closest: WeatherForecastHour | null = null;
-  let closestDistance = Number.POSITIVE_INFINITY;
-  for (const hour of hours) {
-    const milliseconds = instantMilliseconds(hour.validAt);
-    if (milliseconds === null) {
-      continue;
-    }
-
-    const distance = Math.abs(milliseconds - target);
-    if (distance < closestDistance) {
-      closest = hour;
-      closestDistance = distance;
-    }
-  }
-
-  return closestDistance <=
-    FISHING_RULES.weatherMatchToleranceMinutes * MINUTE_MS
-    ? closest
-    : null;
-}
-
 function unavailablePressure(at: string): PressureTendency {
   return {
     state: "unavailable",
@@ -145,9 +120,29 @@ function unavailablePressure(at: string): PressureTendency {
   };
 }
 
+function findOverlappingAlert(
+  startMilliseconds: number,
+  endMilliseconds: number,
+  alerts: readonly OfficialAlert[],
+): OfficialAlert | null {
+  return (
+    alerts.find((alert) => {
+      const alertStart = instantMilliseconds(alert.effectiveAt);
+      const alertEnd = instantMilliseconds(alert.expiresAt);
+      return (
+        alertStart !== null &&
+        alertEnd !== null &&
+        alertStart < endMilliseconds &&
+        alertEnd > startMilliseconds
+      );
+    }) ?? null
+  );
+}
+
 export function buildMovementWindows(
   events: readonly TideEvent[],
   weatherHours: readonly WeatherForecastHour[],
+  alerts: readonly OfficialAlert[] = [],
 ): FishingMovementWindow[] {
   return calculateTideRanges(events).flatMap((range) => {
     const fromTime = instantMilliseconds(range.fromEvent.validAt);
@@ -171,7 +166,11 @@ export function buildMovementWindows(
       return [];
     }
 
-    const weather = findClosestWeatherHour(midpointAt, weatherHours);
+    const weather = findClosestWeatherHour(
+      midpointAt,
+      weatherHours,
+      FISHING_RULES.weatherMatchToleranceMinutes,
+    );
     const windSpeedKmh = weather?.windSpeedKmh ?? null;
     const windGustKmh = weather?.windGustKmh ?? null;
     const windDirectionDeg = weather?.windDirectionDeg ?? null;
@@ -184,14 +183,34 @@ export function buildMovementWindows(
           weatherHours,
         )
       : unavailablePressure(midpointAt);
-    const isCandidate =
+    // An official severe weather or surf alert always outranks a favorable
+    // derived state, so an overlapping alert disqualifies the window.
+    const overlappingAlert = findOverlappingAlert(start, end, alerts);
+    const windBelowStrong =
       windSpeedKmh !== null && windSpeedKmh < SWIM_RULES.windStrongAtKmh;
+    // The approved red strong-wind state is sustained >= 35 km/h OR gust
+    // >= 50 km/h, and a red or missing-data state outranks a favorable
+    // window (rule precedence), so candidacy also requires a known gust
+    // below the configured strong-gust threshold.
+    const gustBelowStrong =
+      windGustKmh !== null && windGustKmh < SWIM_RULES.windGustStrongAtKmh;
+    const isCandidate =
+      windBelowStrong && gustBelowStrong && overlappingAlert === null;
     const windExplanation =
       windSpeedKmh === null
         ? "Modeled wind is unavailable near the midpoint."
-        : isCandidate
+        : windBelowStrong
           ? `Modeled wind ${windSpeedKmh.toFixed(1)} km/h is below the configured strong-wind threshold.`
           : `Modeled wind ${windSpeedKmh.toFixed(1)} km/h reaches the configured strong-wind threshold.`;
+    const gustExplanation =
+      windGustKmh === null
+        ? " Modeled wind gust is unavailable near the midpoint, so it is not a candidate."
+        : gustBelowStrong
+          ? ""
+          : ` Modeled gust ${windGustKmh.toFixed(1)} km/h reaches the configured strong-gust threshold.`;
+    const alertExplanation = overlappingAlert
+      ? ` An official alert is active during this window (${overlappingAlert.headline}), so it is not a candidate.`
+      : "";
 
     return [
       {
@@ -210,7 +229,7 @@ export function buildMovementWindows(
         pressureTendency,
         isCandidate,
         label: "Stronger estimated tidal movement" as const,
-        explanation: `Estimated ${range.direction} movement is strongest near the midpoint between NOAA predicted extrema. ${windExplanation}`,
+        explanation: `Estimated ${range.direction} movement is strongest near the midpoint between NOAA predicted extrema. ${windExplanation}${gustExplanation}${alertExplanation}`,
       },
     ];
   });
@@ -253,6 +272,7 @@ export function buildFishingForecast(
   events: readonly TideEvent[],
   weatherHours: readonly WeatherForecastHour[],
   referenceInstant: string,
+  alerts: readonly OfficialAlert[] = [],
 ): FishingForecastDay[] {
   const startLocalDate = localDateForInstant(referenceInstant);
   if (!startLocalDate) {
@@ -260,7 +280,7 @@ export function buildFishingForecast(
   }
 
   const ranges = calculateTideRanges(events);
-  const movements = buildMovementWindows(events, weatherHours);
+  const movements = buildMovementWindows(events, weatherHours, alerts);
   const shifts = findMeaningfulWindShifts(weatherHours);
   const dates = new Set<string>();
 

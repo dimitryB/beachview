@@ -127,41 +127,44 @@ export function findMeaningfulWindShifts(
         entry.milliseconds !== null,
     )
     .sort((left, right) => left.milliseconds - right.milliseconds);
-  const targetSpan = WIND_RULES.materialShiftHours * HOUR_MS;
-  const tolerance = WIND_RULES.historyToleranceMinutes * 60 * 1_000;
+  const maximumSpan = WIND_RULES.materialShiftHours * HOUR_MS;
+  const shifts: WindShift[] = [];
+  let lastShiftEnd = Number.NEGATIVE_INFINITY;
 
-  return validHours.flatMap((current, index) => {
-    const target = current.milliseconds - targetSpan;
-    let closest:
-      { hour: WeatherForecastHour; milliseconds: number } | undefined;
-    let closestDistance = Number.POSITIVE_INFINITY;
+  // A material shift is any pair of samples no more than materialShiftHours
+  // apart whose direction change reaches the configured threshold. Report a
+  // shift at the earliest hour the threshold is met, spanning back to the
+  // earliest qualifying sample, and treat later detections that start at or
+  // before an already-reported shift's end as continuations of that shift.
+  for (let toIndex = 0; toIndex < validHours.length; toIndex += 1) {
+    const to = validHours[toIndex];
+    if (!to) {
+      continue;
+    }
 
-    for (
-      let candidateIndex = index - 1;
-      candidateIndex >= 0;
-      candidateIndex -= 1
-    ) {
-      const candidate = validHours[candidateIndex];
-      if (!candidate) {
+    for (let fromIndex = 0; fromIndex < toIndex; fromIndex += 1) {
+      const from = validHours[fromIndex];
+      if (!from) {
         continue;
       }
 
-      const distance = Math.abs(candidate.milliseconds - target);
-      if (distance < closestDistance) {
-        closest = candidate;
-        closestDistance = distance;
+      const span = to.milliseconds - from.milliseconds;
+      if (
+        span > maximumSpan ||
+        span <= 0 ||
+        from.milliseconds <= lastShiftEnd
+      ) {
+        continue;
       }
 
-      if (candidate.milliseconds < target - tolerance) {
+      const shift = detectMeaningfulWindShift(from.hour, to.hour);
+      if (shift) {
+        shifts.push(shift);
+        lastShiftEnd = to.milliseconds;
         break;
       }
     }
+  }
 
-    if (!closest || closestDistance > tolerance) {
-      return [];
-    }
-
-    const shift = detectMeaningfulWindShift(closest.hour, current.hour);
-    return shift ? [shift] : [];
-  });
+  return shifts;
 }

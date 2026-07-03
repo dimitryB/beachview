@@ -97,4 +97,59 @@ describe("fetchJson", () => {
     await expect(request).rejects.toBeInstanceOf(ProviderError);
     await expect(request).rejects.toMatchObject({ code: "timeout" });
   });
+
+  it("reports a caller abort as aborted without retrying", async () => {
+    const abortController = new AbortController();
+    const fetchImpl = vi.fn(
+      (_input: RequestInfo | URL, init?: RequestInit) =>
+        new Promise<Response>((_resolve, reject) => {
+          init?.signal?.addEventListener("abort", () => {
+            reject(new DOMException("Aborted", "AbortError"));
+          });
+        }),
+    ) as unknown as typeof fetch;
+
+    const request = fetchJson({
+      provider: "open-meteo-weather",
+      url: "https://example.test/slow",
+      fetchImpl,
+      retryDelayMs: 0,
+      signal: abortController.signal,
+    });
+
+    abortController.abort();
+
+    await expect(request).rejects.toBeInstanceOf(ProviderError);
+    await expect(request).rejects.toMatchObject({
+      code: "aborted",
+      provider: "open-meteo-weather",
+    });
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
+
+  it("reports a timeout during the body read as a timeout, not parse", async () => {
+    const fetchImpl = vi.fn((_input: RequestInfo | URL, init?: RequestInit) => {
+      const body = new Promise<never>((_resolve, reject) => {
+        init?.signal?.addEventListener("abort", () => {
+          reject(new DOMException("Aborted", "AbortError"));
+        });
+      });
+
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        json: () => body,
+      } as unknown as Response);
+    }) as unknown as typeof fetch;
+
+    await expect(
+      fetchJson({
+        provider: "noaa-tides",
+        url: "https://example.test/slow-body",
+        fetchImpl,
+        timeoutMs: 1,
+        retries: 0,
+      }),
+    ).rejects.toMatchObject({ code: "timeout", provider: "noaa-tides" });
+  });
 });

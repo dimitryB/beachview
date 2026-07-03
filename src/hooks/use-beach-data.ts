@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import type { Dispatch, SetStateAction } from "react";
 
 import {
   readProviderCache,
@@ -7,7 +8,7 @@ import {
   type CacheableSource,
   type StorageLike,
 } from "@/data/cache";
-import { ProviderError } from "@/data/fetch-json";
+import { fetchJson, ProviderError } from "@/data/fetch-json";
 import { fetchNoaaTides } from "@/data/noaa-tides";
 import { fetchMarine } from "@/data/open-meteo-marine";
 import { fetchWeather } from "@/data/open-meteo-weather";
@@ -81,8 +82,79 @@ function failedState<T>(
   };
 }
 
+interface RefreshTracker {
+  sequence: number;
+  controller: AbortController | null;
+}
+
+function createTracker(): RefreshTracker {
+  return { sequence: 0, controller: null };
+}
+
+function fetchWeatherWithSignal(signal: AbortSignal): Promise<WeatherDataset> {
+  return fetchWeather((request) => fetchJson({ ...request, signal }));
+}
+
+function fetchMarineWithSignal(signal: AbortSignal): Promise<MarineDataset> {
+  return fetchMarine((request) => fetchJson({ ...request, signal }));
+}
+
+function fetchTidesWithSignal(signal: AbortSignal): Promise<TideDataset> {
+  return fetchNoaaTides((request) => fetchJson({ ...request, signal }));
+}
+
+async function refreshProvider<P extends CacheableSource>(
+  provider: P,
+  tracker: RefreshTracker,
+  fetcher: (signal: AbortSignal) => Promise<CacheDatasetBySource[P]>,
+  setState: Dispatch<SetStateAction<ProviderState<CacheDatasetBySource[P]>>>,
+): Promise<void> {
+  tracker.controller?.abort();
+  tracker.sequence += 1;
+
+  const requestId = tracker.sequence;
+  const controller = new AbortController();
+  tracker.controller = controller;
+
+  setState(refreshingState);
+
+  try {
+    const data = await fetcher(controller.signal);
+
+    if (requestId !== tracker.sequence) {
+      return;
+    }
+
+    const storage = browserStorage();
+    if (storage) {
+      writeProviderCache(provider, data, data.fetchedAt, storage);
+    }
+
+    setState({
+      status: "fresh",
+      data,
+      error: null,
+      fetchedAt: data.fetchedAt,
+      isRefreshing: false,
+    });
+  } catch (error) {
+    if (requestId !== tracker.sequence) {
+      return;
+    }
+
+    if (error instanceof ProviderError && error.code === "aborted") {
+      return;
+    }
+
+    setState((previous) => failedState(previous, error));
+  }
+}
+
 export interface BeachDataController extends BeachDataState {
   refreshAll: () => Promise<void>;
+  refreshMarine: () => Promise<void>;
+  refreshTides: () => Promise<void>;
+  refreshWeather: () => Promise<void>;
 }
 
 export function useBeachData(): BeachDataController {
@@ -96,69 +168,42 @@ export function useBeachData(): BeachDataController {
     initialState("noaa-tides"),
   );
   const started = useRef(false);
+  const weatherRequests = useRef<RefreshTracker>(createTracker());
+  const marineRequests = useRef<RefreshTracker>(createTracker());
+  const tideRequests = useRef<RefreshTracker>(createTracker());
 
-  const refreshWeather = useCallback(async () => {
-    setWeather(refreshingState);
+  const refreshWeather = useCallback(
+    () =>
+      refreshProvider(
+        "open-meteo-weather",
+        weatherRequests.current,
+        fetchWeatherWithSignal,
+        setWeather,
+      ),
+    [],
+  );
 
-    try {
-      const data = await fetchWeather();
-      const storage = browserStorage();
-      if (storage) {
-        writeProviderCache(data.source, data, data.fetchedAt, storage);
-      }
-      setWeather({
-        status: "fresh",
-        data,
-        error: null,
-        fetchedAt: data.fetchedAt,
-        isRefreshing: false,
-      });
-    } catch (error) {
-      setWeather((previous) => failedState(previous, error));
-    }
-  }, []);
+  const refreshMarine = useCallback(
+    () =>
+      refreshProvider(
+        "open-meteo-marine",
+        marineRequests.current,
+        fetchMarineWithSignal,
+        setMarine,
+      ),
+    [],
+  );
 
-  const refreshMarine = useCallback(async () => {
-    setMarine(refreshingState);
-
-    try {
-      const data = await fetchMarine();
-      const storage = browserStorage();
-      if (storage) {
-        writeProviderCache(data.source, data, data.fetchedAt, storage);
-      }
-      setMarine({
-        status: "fresh",
-        data,
-        error: null,
-        fetchedAt: data.fetchedAt,
-        isRefreshing: false,
-      });
-    } catch (error) {
-      setMarine((previous) => failedState(previous, error));
-    }
-  }, []);
-
-  const refreshTides = useCallback(async () => {
-    setTides(refreshingState);
-
-    try {
-      const data = await fetchNoaaTides();
-      const storage = browserStorage();
-      if (storage) {
-        writeProviderCache(data.source, data, data.fetchedAt, storage);
-      }
-      setTides({
-        status: "fresh",
-        data,
-        error: null,
-        fetchedAt: data.fetchedAt,
-        isRefreshing: false,
-      });
-    } catch (error) {
-      setTides((previous) => failedState(previous, error));
-    }
-  }, []);
+  const refreshTides = useCallback(
+    () =>
+      refreshProvider(
+        "noaa-tides",
+        tideRequests.current,
+        fetchTidesWithSignal,
+        setTides,
+      ),
+    [],
+  );
 
   const refreshAll = useCallback(async () => {
     await Promise.allSettled([
@@ -182,5 +227,8 @@ export function useBeachData(): BeachDataController {
     marine,
     tides,
     refreshAll,
+    refreshMarine,
+    refreshTides,
+    refreshWeather,
   };
 }

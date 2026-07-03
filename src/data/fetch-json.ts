@@ -36,25 +36,73 @@ function isRetryable(error: ProviderError): boolean {
   );
 }
 
-function wait(milliseconds: number): Promise<void> {
+function abortedError(provider: DataSource, cause?: unknown): ProviderError {
+  return new ProviderError(
+    provider,
+    "aborted",
+    `${provider} request was aborted.`,
+    { cause },
+  );
+}
+
+function timeoutError(
+  provider: DataSource,
+  timeoutMs: number,
+  cause?: unknown,
+): ProviderError {
+  return new ProviderError(
+    provider,
+    "timeout",
+    `${provider} did not respond within ${timeoutMs} ms.`,
+    { cause },
+  );
+}
+
+function wait(
+  provider: DataSource,
+  milliseconds: number,
+  signal?: AbortSignal,
+): Promise<void> {
+  if (signal?.aborted) {
+    return Promise.reject(abortedError(provider, signal.reason));
+  }
+
   if (milliseconds <= 0) {
     return Promise.resolve();
   }
 
-  return new Promise((resolve) => {
-    window.setTimeout(resolve, milliseconds);
+  return new Promise((resolve, reject) => {
+    const onAbort = () => {
+      window.clearTimeout(timeoutId);
+      reject(abortedError(provider, signal?.reason));
+    };
+    const timeoutId = window.setTimeout(() => {
+      signal?.removeEventListener("abort", onAbort);
+      resolve();
+    }, milliseconds);
+    signal?.addEventListener("abort", onAbort, { once: true });
   });
 }
+
+type FetchOnceRequest = Required<
+  Pick<JsonFetchRequest, "provider" | "url" | "timeoutMs" | "fetchImpl">
+> &
+  Pick<JsonFetchRequest, "signal">;
 
 async function fetchOnce({
   provider,
   url,
   timeoutMs,
   fetchImpl,
-}: Required<
-  Pick<JsonFetchRequest, "provider" | "url" | "timeoutMs" | "fetchImpl">
->): Promise<JsonFetchResult> {
+  signal,
+}: FetchOnceRequest): Promise<JsonFetchResult> {
+  if (signal?.aborted) {
+    throw abortedError(provider, signal.reason);
+  }
+
   const controller = new AbortController();
+  const onCallerAbort = () => controller.abort(signal?.reason);
+  signal?.addEventListener("abort", onCallerAbort, { once: true });
   const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
   const startedAt = performance.now();
 
@@ -80,6 +128,14 @@ async function fetchOnce({
     try {
       data = await response.json();
     } catch (error) {
+      if (signal?.aborted) {
+        throw abortedError(provider, error);
+      }
+
+      if (controller.signal.aborted) {
+        throw timeoutError(provider, timeoutMs, error);
+      }
+
       throw new ProviderError(
         provider,
         "parse",
@@ -98,13 +154,12 @@ async function fetchOnce({
       throw error;
     }
 
+    if (signal?.aborted) {
+      throw abortedError(provider, error);
+    }
+
     if (controller.signal.aborted) {
-      throw new ProviderError(
-        provider,
-        "timeout",
-        `${provider} did not respond within ${timeoutMs} ms.`,
-        { cause: error },
-      );
+      throw timeoutError(provider, timeoutMs, error);
     }
 
     throw new ProviderError(
@@ -115,6 +170,7 @@ async function fetchOnce({
     );
   } finally {
     window.clearTimeout(timeoutId);
+    signal?.removeEventListener("abort", onCallerAbort);
   }
 }
 
@@ -125,12 +181,13 @@ export const fetchJson: JsonFetcher = async ({
   retries = 1,
   retryDelayMs = 200,
   fetchImpl = fetch,
+  signal,
 }) => {
   let lastError: ProviderError | null = null;
 
   for (let attempt = 0; attempt <= retries; attempt += 1) {
     try {
-      return await fetchOnce({ provider, url, timeoutMs, fetchImpl });
+      return await fetchOnce({ provider, url, timeoutMs, fetchImpl, signal });
     } catch (error) {
       const providerError =
         error instanceof ProviderError
@@ -145,7 +202,7 @@ export const fetchJson: JsonFetcher = async ({
         throw providerError;
       }
 
-      await wait(retryDelayMs * (attempt + 1));
+      await wait(provider, retryDelayMs * (attempt + 1), signal);
     }
   }
 

@@ -1,12 +1,34 @@
 import {
   assessDirectRadiation,
+  assessExposure,
   assessSwimConditions,
   assessUv,
   assessWaterTemperature,
   assessWaveHeight,
   assessWavePeriod,
   assessWind,
+  deriveSwimmingSummary,
+  type SwimmingSummaryInput,
 } from "@/domain/comfort";
+
+function summaryInput(
+  overrides: Partial<SwimmingSummaryInput> = {},
+): SwimmingSummaryInput {
+  return {
+    waveHeightM: 0.6,
+    wavePeriodS: 8,
+    waterTemperatureC: 22,
+    windSpeedKmh: 10,
+    windGustKmh: 15,
+    uvIndex: 3,
+    directRadiationWm2: 100,
+    cloudCoverPct: 90,
+    validAt: "2026-07-02T20:00:00.000Z",
+    hasCoreData: true,
+    hasStaleData: false,
+    ...overrides,
+  };
+}
 
 describe("swimming comfort rules", () => {
   it("preserves exact wave-height and wave-period boundaries", () => {
@@ -57,6 +79,31 @@ describe("swimming comfort rules", () => {
     );
   });
 
+  it("combines current exposure inputs with warning precedence", () => {
+    expect(
+      assessExposure(2, 500, 80, "2026-07-02T19:00:00.000Z"),
+    ).toMatchObject({
+      tone: "warning",
+      label: "Direct midday sun",
+      metric: "exposure",
+    });
+    expect(
+      assessExposure(6, 100, 80, "2026-07-02T20:00:00.000Z"),
+    ).toMatchObject({
+      tone: "warning",
+      label: "Strong UV exposure",
+    });
+    expect(
+      assessExposure(4, 300, 70, "2026-07-02T20:00:00.000Z"),
+    ).toMatchObject({
+      tone: "neutral",
+      label: "Overcast",
+    });
+    expect(
+      assessExposure(null, null, null, "2026-07-02T20:00:00.000Z").tone,
+    ).toBe("unavailable");
+  });
+
   it("gives missing data precedence and never emits a safety claim", () => {
     const result = assessSwimConditions({
       waveHeightM: 1.2,
@@ -73,5 +120,97 @@ describe("swimming comfort rules", () => {
     expect(result.summary.toLowerCase()).not.toContain("safe");
     expect(assessWaveHeight(Number.NaN).tone).toBe("unavailable");
     expect(assessWind(Number.NaN, 10).tone).toBe("unavailable");
+  });
+});
+
+describe("deriveSwimmingSummary", () => {
+  it("reports neutral readiness when nothing is flagged", () => {
+    const summary = deriveSwimmingSummary(summaryInput());
+
+    expect(summary.readiness).toEqual({
+      tone: "neutral",
+      label: "No configured comfort warning triggered",
+      detail:
+        "Comfort rules do not replace official guidance or beach conditions.",
+    });
+    expect(summary.flags).toHaveLength(0);
+    expect(summary.cards.water.tone).toBe("neutral");
+    expect(summary.cards.exposure.label).toBe("Overcast");
+  });
+
+  it("counts flags and orders danger ahead of warning and alert", () => {
+    const summary = deriveSwimmingSummary(
+      summaryInput({ waterTemperatureC: 25, wavePeriodS: 5 }),
+    );
+
+    expect(summary.readiness.tone).toBe("danger");
+    expect(summary.readiness.label).toBe("2 configured comfort flags");
+    expect(summary.flags.map((flag) => flag.label)).toEqual([
+      "Choppy",
+      "Warm-water alert",
+    ]);
+    expect(summary.readiness.detail).toBe(
+      "Choppy · Warm-water alert. Not a safety determination.",
+    );
+  });
+
+  it("lets an unavailable input outrank otherwise-favorable conditions", () => {
+    const summary = deriveSwimmingSummary(
+      summaryInput({ waterTemperatureC: null }),
+    );
+
+    expect(summary.readiness.tone).toBe("unavailable");
+    expect(summary.readiness.label).toBe("Current comfort data is incomplete");
+    expect(summary.readiness.detail).toContain("Not a safety determination.");
+    expect(summary.cards.water.tone).toBe("unavailable");
+  });
+
+  it("lets an unavailable input outrank active danger flags", () => {
+    const summary = deriveSwimmingSummary(
+      summaryInput({
+        waveHeightM: 2.4,
+        uvIndex: null,
+        directRadiationWm2: null,
+        cloudCoverPct: null,
+      }),
+    );
+
+    expect(summary.cards.waves.tone).toBe("danger");
+    expect(summary.readiness.tone).toBe("unavailable");
+    expect(summary.readiness.label).toBe("Current comfort data is incomplete");
+  });
+
+  it("reports incomplete data when a core provider dataset is missing", () => {
+    const summary = deriveSwimmingSummary(summaryInput({ hasCoreData: false }));
+
+    expect(summary.readiness.tone).toBe("unavailable");
+    expect(summary.readiness.label).toBe("Current comfort data is incomplete");
+  });
+
+  it("surfaces stale cached data as a warning while keeping flag details", () => {
+    const summary = deriveSwimmingSummary(
+      summaryInput({ hasStaleData: true, wavePeriodS: 5 }),
+    );
+
+    expect(summary.readiness.tone).toBe("warning");
+    expect(summary.readiness.label).toBe("Using cached current conditions");
+    expect(summary.readiness.detail).toBe(
+      "Choppy. Not a safety determination.",
+    );
+  });
+
+  it("never emits a safety claim in readiness text", () => {
+    const summaries = [
+      deriveSwimmingSummary(summaryInput()),
+      deriveSwimmingSummary(summaryInput({ waterTemperatureC: null })),
+      deriveSwimmingSummary(summaryInput({ hasStaleData: true })),
+    ];
+
+    for (const summary of summaries) {
+      const text =
+        `${summary.readiness.label} ${summary.readiness.detail}`.toLowerCase();
+      expect(text).not.toContain("safe to swim");
+      expect(text).not.toContain("no rip-current risk");
+    }
   });
 });

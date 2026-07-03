@@ -1,7 +1,7 @@
 import type { DataSource, IsoInstant } from "@/types/domain";
 
 export type ProviderErrorCode =
-  "timeout" | "network" | "http" | "parse" | "validation";
+  "timeout" | "network" | "http" | "parse" | "validation" | "aborted";
 
 export interface JsonFetchRequest {
   provider: DataSource;
@@ -10,6 +10,7 @@ export interface JsonFetchRequest {
   retries?: number;
   retryDelayMs?: number;
   fetchImpl?: typeof fetch;
+  signal?: AbortSignal;
 }
 
 export interface JsonFetchResult {

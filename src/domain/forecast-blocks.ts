@@ -384,7 +384,8 @@ export function findBestLateDayWindow(
   marineHours: readonly MarineForecastHour[],
   solarDay: SolarDay | null,
 ): SwimWindow | null {
-  if (!solarDay?.sunsetAt) {
+  const sunsetAt = solarDay?.sunsetAt ?? null;
+  if (!sunsetAt) {
     return null;
   }
 
@@ -392,10 +393,10 @@ export function findBestLateDayWindow(
     localDate,
     weatherHours,
     marineHours,
-    solarDay.sunsetAt,
+    sunsetAt,
   );
   const candidates = qualifyingRuns(hours)
-    .map((run) => windowForRun(run, solarDay.sunsetAt ?? ""))
+    .map((run) => windowForRun(run, sunsetAt))
     .filter((window): window is SwimWindow => window !== null)
     .sort((left, right) => {
       const leftDuration = Date.parse(left.endAt) - Date.parse(left.startAt);
@@ -414,10 +415,38 @@ export function buildSwimmingForecast(
   marineHours: readonly MarineForecastHour[],
   solarDays: readonly SolarDay[],
 ): SwimForecastDay[] {
-  const dates = new Set<string>();
-  if (solarDays.length > 0) {
-    for (const day of solarDays) {
-      dates.add(day.providerDate);
+  // Solar days are requested with timezone=GMT, so providerDate is a GMT
+  // calendar day. In summer the Eastern sunset (~20:15 EDT) falls after
+  // 00:00 UTC of the next GMT day, so providerDate cannot be used as an
+  // Eastern local date. Key each solar day by the Eastern local date of its
+  // sunset instant instead. Days without a parseable sunset cannot be keyed
+  // reliably and are skipped.
+  const solarDayByLocalDate = new Map<string, SolarDay>();
+  for (const day of solarDays) {
+    const sunsetLocalDate = day.sunsetAt
+      ? localDateForInstant(day.sunsetAt)
+      : null;
+    if (sunsetLocalDate && !solarDayByLocalDate.has(sunsetLocalDate)) {
+      solarDayByLocalDate.set(sunsetLocalDate, day);
+    }
+  }
+
+  const dates = new Set<string>(solarDayByLocalDate.keys());
+  if (dates.size > 0) {
+    // A solar day without a parseable sunset cannot be keyed, which would
+    // otherwise silently drop that Eastern date from the outlook. Restore
+    // hourly-covered dates that fall inside the solar span so such days
+    // render as incomplete cards instead of disappearing. Dates outside
+    // the span are GMT buffer artifacts (evening-only coverage from the
+    // adjacent GMT day) and stay excluded.
+    const sortedSolarDates = [...dates].sort();
+    const minDate = sortedSolarDates[0]!;
+    const maxDate = sortedSolarDates[sortedSolarDates.length - 1]!;
+    for (const hour of [...weatherHours, ...marineHours]) {
+      const localDate = localDateForInstant(hour.validAt);
+      if (localDate && localDate >= minDate && localDate <= maxDate) {
+        dates.add(localDate);
+      }
     }
   } else {
     for (const hour of [...weatherHours, ...marineHours]) {
@@ -432,8 +461,7 @@ export function buildSwimmingForecast(
     .sort()
     .slice(0, BEACH.forecastDays)
     .map((localDate) => {
-      const solarDay =
-        solarDays.find((day) => day.providerDate === localDate) ?? null;
+      const solarDay = solarDayByLocalDate.get(localDate) ?? null;
       const lateDayHours = buildLateDayHours(
         localDate,
         weatherHours,

@@ -23,9 +23,18 @@
   --color-warning: #f2b85b;
   --color-danger: #ff6878;
   --color-cold: #63a8ff;
+  --color-info: #77dce7;
 
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
   --radius-card: 14px;
+  --radius-control: 10px;
   --radius-pill: 999px;
+  --focus-ring: 3px solid var(--color-warning);
   --shadow-raised: 0 24px 64px rgb(0 0 0 / 22%);
   --content-width: 1200px;
 }

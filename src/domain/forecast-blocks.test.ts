@@ -48,7 +48,9 @@ function solarDay(providerDate: string, sunsetAt: string): SolarDay {
 }
 
 const localDate = "2026-07-02";
-const sunset = solarDay(localDate, "2026-07-03T00:30:00.000Z");
+// July sunset at 20:30 EDT is 00:30 UTC of the next day, so the GMT-keyed
+// provider day containing this sunset instant is 2026-07-03.
+const sunset = solarDay("2026-07-03", "2026-07-03T00:30:00.000Z");
 
 describe("late-day swimming forecast", () => {
   it("selects the longest passing sequence and keeps warnings explainable", () => {
@@ -220,7 +222,8 @@ describe("late-day swimming forecast", () => {
         weather.push(weatherHour(validAt));
         marine.push(marineHour(validAt));
       }
-      solar.push(solarDay(date, `${nextDate}T00:30:00.000Z`));
+      // The sunset at 20:30 EDT arrives under the next GMT provider day.
+      solar.push(solarDay(nextDate, `${nextDate}T00:30:00.000Z`));
     }
 
     const forecast = buildSwimmingForecast(weather, marine, solar);
@@ -258,13 +261,74 @@ describe("late-day swimming forecast", () => {
     expect(forecast.map((day) => day.state)).toEqual(["match", "match"]);
   });
 
+  it("keeps a covered date as incomplete when only its sunset is missing", () => {
+    // Provider days 2026-07-03 and 2026-07-05 carry the sunsets of Eastern
+    // July 2 and July 4. The July 4 provider day (Eastern July 3 sunset) is
+    // missing its sunset, so Eastern July 3 cannot be keyed from solar data
+    // — but it has hourly coverage and must render as an incomplete card
+    // rather than disappear from the outlook.
+    const times = [
+      "2026-07-02T19:00:00.000Z",
+      "2026-07-03T19:00:00.000Z",
+      "2026-07-04T19:00:00.000Z",
+    ];
+    const forecast = buildSwimmingForecast(
+      times.map((validAt) => weatherHour(validAt)),
+      times.map((validAt) => marineHour(validAt)),
+      [
+        solarDay("2026-07-03", "2026-07-03T00:30:00.000Z"),
+        { providerDate: "2026-07-04", sunriseAt: null, sunsetAt: null },
+        solarDay("2026-07-05", "2026-07-05T00:30:00.000Z"),
+      ],
+    );
+
+    expect(forecast.map((day) => day.localDate)).toEqual([
+      "2026-07-02",
+      "2026-07-03",
+      "2026-07-04",
+    ]);
+    expect(forecast[1]?.state).toBe("incomplete");
+  });
+
   it("does not turn the GMT hourly buffer into an extra local forecast day", () => {
     const forecast = buildSwimmingForecast(
       [weatherHour("2026-07-02T00:00:00.000Z")],
       [marineHour("2026-07-02T00:00:00.000Z")],
-      [solarDay("2026-07-02", "2026-07-03T00:30:00.000Z")],
+      [solarDay("2026-07-03", "2026-07-03T00:30:00.000Z")],
     );
 
     expect(forecast.map((day) => day.localDate)).toEqual(["2026-07-02"]);
+  });
+
+  it("matches a summer sunset after 00:00Z to its Eastern local day", () => {
+    // The pipeline requests timezone=GMT, so the 20:15 EDT July 2 sunset
+    // (2026-07-03T00:15Z) is delivered under GMT provider day 2026-07-03.
+    const times = [
+      "2026-07-02T19:00:00.000Z",
+      "2026-07-02T20:00:00.000Z",
+      "2026-07-02T21:00:00.000Z",
+    ];
+    const forecast = buildSwimmingForecast(
+      times.map((time) => weatherHour(time)),
+      times.map((time) => marineHour(time)),
+      [solarDay("2026-07-03", "2026-07-03T00:15:00.000Z")],
+    );
+
+    expect(forecast.map((day) => day.localDate)).toEqual(["2026-07-02"]);
+    expect(forecast[0]?.state).toBe("match");
+    expect(forecast[0]?.lateDaySummary.startAt).toBe(
+      "2026-07-02T19:00:00.000Z",
+    );
+  });
+
+  it("falls back to hour-derived dates when no solar day has a sunset", () => {
+    const forecast = buildSwimmingForecast(
+      [weatherHour("2026-07-02T19:00:00.000Z")],
+      [marineHour("2026-07-02T19:00:00.000Z")],
+      [{ providerDate: "2026-07-02", sunriseAt: null, sunsetAt: null }],
+    );
+
+    expect(forecast.map((day) => day.localDate)).toEqual(["2026-07-02"]);
+    expect(forecast[0]?.state).toBe("incomplete");
   });
 });
