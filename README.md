@@ -11,7 +11,7 @@ The application is intended to be a lightweight static web app that can run on a
 
 ## Project status
 
-Phases 0 and 1 are complete. The application now has a responsive dark shell, strict normalized domain types, live Open-Meteo weather and marine adapters, NOAA Sandbridge tide predictions, typed provider errors, partial-provider rendering, and versioned browser caching. Comfort rules and tide/window derivations begin in Phase 2.
+Phases 0 through 2 are complete. The application now has a responsive dark shell; strict normalized weather, marine, and tide data; resilient provider caching; and tested derived behavior for wind shifts, pressure tendency, tide phase and height estimation, swim comfort rules, late-day swim windows, and fishing timelines.
 
 ## Fixed operating scope
 
@@ -72,4 +72,4 @@ This product summarizes conditions; it does not determine whether swimming is sa
 
 ## Recommended next action
 
-Begin Phase 2 in the [implementation roadmap](IMPLEMENTATION_ROADMAP.md): implement wind utilities, pressure tendency, tide interpolation and phase, approved swim rules, and explainable candidate windows.
+Begin Phase 3 in the [implementation roadmap](IMPLEMENTATION_ROADMAP.md): connect the completed derived behavior to current-condition cards, semantic status flags, and the Fishing dashboard.

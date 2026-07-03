@@ -41,7 +41,9 @@ export function SwimmingPage({ data }: SwimmingPageProps) {
                 ? "Live Sandbridge feeds connected"
                 : "Connecting live Sandbridge feeds"}
             </strong>
-            <span>Comfort rules and window scoring begin in Phase 2.</span>
+            <span>
+              Derived comfort rules are ready; visual flags expand in Phase 3.
+            </span>
           </div>
         </div>
       </section>

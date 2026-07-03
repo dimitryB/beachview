@@ -1,5 +1,11 @@
 import { BEACH } from "@/config/location";
-import { SWIM_RULES } from "@/config/rules";
+import {
+  FISHING_RULES,
+  PRESSURE_RULES,
+  SWIM_RULES,
+  TIDE_RULES,
+  WIND_RULES,
+} from "@/config/rules";
 
 describe("fixed project configuration", () => {
   it("locks the application to Sandbridge", () => {
@@ -23,7 +29,36 @@ describe("fixed project configuration", () => {
       windGustWarningAtKmh: 30,
       windStrongAtKmh: 35,
       windGustStrongAtKmh: 50,
+      uvWarningAt: 6,
+      directRadiationWarningAtWm2: 500,
+      middayStartHour: 11,
+      middayEndHour: 15,
       lateDayStartHour: 15,
+      lateDayMinimumHours: 2,
+      lowerExposureUvAtMost: 3,
+      lowerExposureRadiationAtMostWm2: 200,
+      lowerExposureCloudCoverAtLeastPct: 70,
+    });
+  });
+
+  it("records the approved derived-signal conventions", () => {
+    expect(WIND_RULES).toEqual({
+      materialShiftAtDeg: 45,
+      materialShiftHours: 6,
+      meaningfulSpeedAtKmh: 8,
+      historyToleranceMinutes: 60,
+    });
+    expect(PRESSURE_RULES).toEqual({
+      lookbackHours: 3,
+      historyToleranceMinutes: 90,
+      tendencyThresholdHpa: 1,
+    });
+    expect(TIDE_RULES).toEqual({
+      slackWindowMinutes: 30,
+    });
+    expect(FISHING_RULES).toEqual({
+      movementHalfWindowMinutes: 60,
+      weatherMatchToleranceMinutes: 90,
     });
   });
 });

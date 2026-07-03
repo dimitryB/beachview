@@ -46,7 +46,7 @@ export function ForecastPlaceholder({
             <span className="forecast-day__line forecast-day__line--short" />
             <p>
               {forecastReady
-                ? "Window scoring begins in Phase 2"
+                ? "Window matching is ready; forecast cards land in Phase 4"
                 : "Awaiting forecast feeds"}
             </p>
           </article>

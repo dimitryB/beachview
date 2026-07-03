@@ -30,7 +30,7 @@ export function TidePlaceholder({ tides }: TidePlaceholderProps) {
         className="tide-placeholder"
         aria-label={
           tides.data
-            ? "NOAA high and low predictions loaded; estimated curve begins in Phase 2"
+            ? "NOAA high and low predictions loaded; estimated chart rendering lands in Phase 4"
             : "Tide data awaiting NOAA predictions"
         }
       >
@@ -64,7 +64,7 @@ export function TidePlaceholder({ tides }: TidePlaceholderProps) {
         </svg>
         <p>
           {tides.data
-            ? "Dashed curve is illustrative; continuous estimation begins in Phase 2."
+            ? "Dashed curve is illustrative; estimated chart rendering lands in Phase 4."
             : (tides.error ?? "Loading NOAA high and low predictions.")}
         </p>
       </div>

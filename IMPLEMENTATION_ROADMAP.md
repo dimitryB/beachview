@@ -114,58 +114,60 @@ Thresholds must live in configuration so later changes do not require component 
 
 ## Phase 2 — Derived domain behavior
 
+**Status: Complete — July 2, 2026**
+
 ### Step 11: Implement wind utilities
 
-- [ ] Normalize degrees.
-- [ ] Convert degrees to 16-point cardinal labels.
-- [ ] Calculate circular direction change.
-- [ ] Detect meaningful six-hour shifts.
+- [x] Normalize degrees.
+- [x] Convert degrees to 16-point cardinal labels.
+- [x] Calculate circular direction change.
+- [x] Detect meaningful six-hour shifts.
 
 ### Step 12: Implement pressure tendency
 
-- [ ] Select the closest valid value about three hours earlier.
-- [ ] Calculate signed hPa change.
-- [ ] Classify rising, steady, and falling.
-- [ ] Test equality and missing-history boundaries.
+- [x] Select the closest valid value about three hours earlier.
+- [x] Calculate signed hPa change.
+- [x] Classify rising, steady, and falling.
+- [x] Test equality and missing-history boundaries.
 
 ### Step 13: Implement tide phase and interpolation
 
-- [ ] Locate bounding events.
-- [ ] Classify incoming, outgoing, and near-slack states.
-- [ ] Calculate estimated height with cosine interpolation.
-- [ ] Calculate time until next event.
-- [ ] Generate accessible event summaries.
-- [ ] Ensure all derived tide values carry an estimated label.
+- [x] Locate bounding events.
+- [x] Classify incoming, outgoing, and near-slack states.
+- [x] Calculate estimated height with cosine interpolation.
+- [x] Calculate time until next event.
+- [x] Generate accessible event summaries.
+- [x] Ensure all derived tide values carry an estimated label.
 
 ### Step 14: Implement swimming rules
 
-- [ ] Add wave-height, period, temperature, wind, gust, UV, and radiation rules.
-- [ ] Return semantic status, label, and explanation from every rule.
-- [ ] Test the exact `1.0 m`, `7 s`, `20°C`, and `24°C` boundaries.
-- [ ] Implement precedence without using a “safe” aggregate.
+- [x] Add wave-height, period, temperature, wind, gust, UV, and radiation rules.
+- [x] Return semantic status, label, and explanation from every rule.
+- [x] Test the exact `1.0 m`, `7 s`, `20°C`, and `24°C` boundaries.
+- [x] Implement precedence without using a “safe” aggregate.
 
 ### Step 15: Implement late-day forecast blocks
 
-- [ ] Convert hourly records into Sandbridge local time.
-- [ ] Generate consecutive two-hour candidate windows from `15:00` to sunset.
-- [ ] Reject incomplete and red-condition windows.
-- [ ] Apply exposure and wind criteria.
-- [ ] Select the longest/earliest passing window.
-- [ ] Produce an explainable view model.
+- [x] Convert hourly records into Sandbridge local time.
+- [x] Generate consecutive two-hour candidate windows from `15:00` to sunset.
+- [x] Reject incomplete and red-condition windows.
+- [x] Apply exposure and wind criteria.
+- [x] Select the longest/earliest passing window.
+- [x] Produce an explainable view model.
 
 ### Step 16: Implement fishing signals
 
-- [ ] Calculate daily tide ranges.
-- [ ] Identify stronger estimated tidal-movement midpoints.
-- [ ] Attach wind, gust, direction, and pressure to candidate windows.
-- [ ] Flag material wind shifts.
-- [ ] Generate chronological daily fishing timelines.
+- [x] Calculate daily tide ranges.
+- [x] Identify stronger estimated tidal-movement midpoints.
+- [x] Attach wind, gust, direction, and pressure to candidate windows.
+- [x] Flag material wind shifts.
+- [x] Generate chronological daily fishing timelines.
 
 ### Phase 2 exit criteria
 
-- All rule boundaries and time calculations have unit tests.
-- Ten-day inputs generate stable Swimming and Fishing view models.
-- No derived output is described as observed or guaranteed.
+- [x] All rule boundaries and time calculations have unit tests.
+- [x] Ten-day inputs generate stable Swimming and Fishing view models.
+- [x] No derived output is described as observed or guaranteed.
 
 ## Phase 3 — Application shell and current conditions
 

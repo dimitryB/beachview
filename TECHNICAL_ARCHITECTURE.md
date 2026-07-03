@@ -221,6 +221,17 @@ It does not turn the intermediate height into an official NOAA prediction. The g
 
 ## 10. State model
 
+Derived behavior is implemented as pure modules under `src/domain/`:
+
+- `wind.ts` normalizes directions, assigns 16-point cardinal labels, and finds material six-hour shifts.
+- `pressure.ts` calculates the modeled three-hour tendency using a bounded nearest-history lookup.
+- `tide.ts` derives predicted phase, time to the next event, and cosine-estimated height between NOAA extrema.
+- `comfort.ts` returns semantic rule assessments without producing a safety verdict.
+- `forecast-blocks.ts` generates explainable late-day Swimming view models in Sandbridge local time.
+- `fishing.ts` generates tide ranges, stronger estimated-movement windows, and chronological daily timelines.
+
+Thresholds remain in `src/config/rules.ts`; React components do not reimplement rule comparisons.
+
 Each independent section uses:
 
 ```text

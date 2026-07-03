@@ -11,7 +11,7 @@ interface FishingPageProps {
 export function FishingPage({ data }: FishingPageProps) {
   const weather = data.weather.data?.current;
   const tideDescription = data.tides.data
-    ? `${data.tides.data.events.length} predicted events loaded · phase follows in Phase 2`
+    ? `${data.tides.data.events.length} predicted events loaded · derived phase presentation follows in Phase 3`
     : (data.tides.error ?? "Loading NOAA high and low predictions");
   const windDescription =
     weather?.windDirectionDeg.value !== null &&
@@ -65,7 +65,7 @@ export function FishingPage({ data }: FishingPageProps) {
             value={null}
           />
           <ConditionCard
-            description="Modeled sea-level pressure; tendency follows in Phase 2"
+            description="Modeled sea-level pressure; derived tendency presentation follows in Phase 3"
             label="Pressure"
             status={data.weather.status}
             unit="hPa"
