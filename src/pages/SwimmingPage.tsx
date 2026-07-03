@@ -1,16 +1,23 @@
+import { lazy, Suspense } from "react";
+
 import {
   ConditionCard,
   type ConditionAssessment,
 } from "@/components/conditions/ConditionCard";
 import { DataStatus } from "@/components/conditions/DataStatus";
 import { ProviderNotice } from "@/components/conditions/ProviderNotice";
-import { SwimmingOutlook } from "@/components/forecast/SwimmingOutlook";
+import { DeferredOutlook } from "@/components/forecast/DeferredOutlook";
 import { formatEasternValidTime, formatNumber } from "@/components/format";
 import { TideChart } from "@/components/tide/TideChart";
 import { deriveSwimmingSummary } from "@/domain/comfort";
 import { findClosestWeatherHour } from "@/domain/weather";
 import { degreesToCardinal } from "@/domain/wind";
 import type { BeachDataState } from "@/types/domain";
+
+const SwimmingOutlook = lazy(async () => {
+  const module = await import("@/components/forecast/SwimmingOutlook");
+  return { default: module.SwimmingOutlook };
+});
 
 interface SwimmingPageProps {
   data: BeachDataState;
@@ -215,12 +222,14 @@ export function SwimmingPage({
       </section>
 
       <TideChart onRetry={onRetryTides} tides={data.tides} />
-      <SwimmingOutlook
-        marine={data.marine}
-        onRetryMarine={onRetryMarine}
-        onRetryWeather={onRetryWeather}
-        weather={data.weather}
-      />
+      <Suspense fallback={<DeferredOutlook activity="swimming" />}>
+        <SwimmingOutlook
+          marine={data.marine}
+          onRetryMarine={onRetryMarine}
+          onRetryWeather={onRetryWeather}
+          weather={data.weather}
+        />
+      </Suspense>
     </div>
   );
 }

@@ -140,7 +140,7 @@ describe("useBeachData", () => {
     expect(fetchNoaaTides).not.toHaveBeenCalled();
   });
 
-  it("ignores a superseded refresh that resolves after a newer one", async () => {
+  it("coalesces rapid repeated refresh calls while a request is in flight", async () => {
     vi.mocked(fetchWeather).mockResolvedValue(weather);
     vi.mocked(fetchMarine).mockResolvedValue(marine);
     vi.mocked(fetchNoaaTides).mockResolvedValue(tides);
@@ -150,83 +150,62 @@ describe("useBeachData", () => {
       expect(result.current.weather.status).toBe("fresh");
     });
 
-    const olderFetchedAt = new Date("2026-07-02T10:00:00.000Z").toISOString();
-    const newerFetchedAt = new Date("2026-07-02T12:00:00.000Z").toISOString();
-    const olderWeather = parseWeatherResponse(WEATHER_RESPONSE, olderFetchedAt);
-    const newerWeather = parseWeatherResponse(WEATHER_RESPONSE, newerFetchedAt);
+    vi.mocked(fetchWeather).mockClear();
+    const refreshedAt = new Date("2026-07-02T12:00:00.000Z").toISOString();
+    const refreshedWeather = parseWeatherResponse(
+      WEATHER_RESPONSE,
+      refreshedAt,
+    );
+    let resolveRefresh: (value: typeof refreshedWeather) => void = () => {};
+    vi.mocked(fetchWeather).mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveRefresh = resolve;
+        }),
+    );
 
-    let resolveOlder: (value: typeof olderWeather) => void = () => {};
-    vi.mocked(fetchWeather)
-      .mockImplementationOnce(
-        () =>
-          new Promise((resolve) => {
-            resolveOlder = resolve;
-          }),
-      )
-      .mockResolvedValueOnce(newerWeather);
-
-    let older: Promise<void> = Promise.resolve();
+    let firstRefresh: Promise<void> = Promise.resolve();
+    let repeatedRefresh: Promise<void> = Promise.resolve();
     await act(async () => {
-      older = result.current.refreshWeather();
-      await result.current.refreshWeather();
+      firstRefresh = result.current.refreshWeather();
+      repeatedRefresh = result.current.refreshWeather();
     });
 
-    expect(result.current.weather.data).toBe(newerWeather);
-    expect(result.current.weather.fetchedAt).toBe(newerFetchedAt);
+    expect(firstRefresh).toBe(repeatedRefresh);
+    expect(fetchWeather).toHaveBeenCalledOnce();
+    expect(result.current.weather.isRefreshing).toBe(true);
 
     await act(async () => {
-      resolveOlder(olderWeather);
-      await older;
+      resolveRefresh(refreshedWeather);
+      await Promise.all([firstRefresh, repeatedRefresh]);
     });
 
     expect(result.current.weather.status).toBe("fresh");
-    expect(result.current.weather.data).toBe(newerWeather);
-    expect(result.current.weather.fetchedAt).toBe(newerFetchedAt);
+    expect(result.current.weather.data).toBe(refreshedWeather);
+    expect(result.current.weather.fetchedAt).toBe(refreshedAt);
     expect(result.current.weather.error).toBeNull();
   });
 
-  it("ignores a superseded refresh failure after a newer success", async () => {
+  it("allows a new refresh after the prior coalesced request settles", async () => {
     vi.mocked(fetchWeather).mockResolvedValue(weather);
     vi.mocked(fetchMarine).mockResolvedValue(marine);
     vi.mocked(fetchNoaaTides).mockResolvedValue(tides);
 
     const { result } = renderHook(() => useBeachData());
     await waitFor(() => {
-      expect(result.current.marine.status).toBe("fresh");
+      expect(result.current.weather.status).toBe("fresh");
     });
 
-    let rejectOlder: (error: unknown) => void = () => {};
-    vi.mocked(fetchMarine)
-      .mockImplementationOnce(
-        () =>
-          new Promise((_resolve, reject) => {
-            rejectOlder = reject;
-          }),
-      )
-      .mockResolvedValueOnce(marine);
-
-    let older: Promise<void> = Promise.resolve();
-    await act(async () => {
-      older = result.current.refreshMarine();
-      await result.current.refreshMarine();
-    });
-
-    expect(result.current.marine.status).toBe("fresh");
+    vi.mocked(fetchWeather).mockClear();
+    vi.mocked(fetchWeather).mockResolvedValue(weather);
 
     await act(async () => {
-      rejectOlder(
-        new ProviderError(
-          "open-meteo-marine",
-          "network",
-          "Marine provider unavailable.",
-        ),
-      );
-      await older;
+      await result.current.refreshWeather();
+      await result.current.refreshWeather();
     });
 
-    expect(result.current.marine.status).toBe("fresh");
-    expect(result.current.marine.data).toBe(marine);
-    expect(result.current.marine.error).toBeNull();
-    expect(result.current.marine.isRefreshing).toBe(false);
+    expect(fetchWeather).toHaveBeenCalledTimes(2);
+    expect(result.current.weather.status).toBe("fresh");
+    expect(result.current.weather.isRefreshing).toBe(false);
   });
 });

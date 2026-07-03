@@ -919,6 +919,26 @@ a:hover {
   line-height: 1.55;
 }
 
+.deferred-outlook__skeleton {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.deferred-outlook__skeleton span {
+  min-height: 180px;
+  background: linear-gradient(
+    90deg,
+    rgb(166 186 198 / 8%),
+    rgb(166 186 198 / 18%),
+    rgb(166 186 198 / 8%)
+  );
+  background-size: 220% 100%;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  animation: skeleton-shift 1.4s ease-in-out infinite;
+}
+
 @media (min-width: 720px) {
   .hero-panel {
     grid-template-columns: minmax(0, 1fr) minmax(260px, 0.46fr);
@@ -1012,6 +1032,14 @@ a:hover {
   .site-footer__meta {
     text-align: left;
   }
+
+  .deferred-outlook__skeleton {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .deferred-outlook__skeleton span:not(:first-child) {
+    display: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1023,6 +1051,7 @@ a:hover {
   }
 
   .condition-card__skeleton,
+  .deferred-outlook__skeleton span,
   .refresh-button:disabled span {
     animation: none;
   }

@@ -348,6 +348,8 @@ Use content-driven CSS grid and container queries where practical. Breakpoints a
 ## 9. Loading and motion
 
 - Skeletons match final component dimensions to prevent layout shift.
+- The ten-day Swimming and Fishing presentations load behind a labeled,
+  layout-stable skeleton so current conditions can render first.
 - Use a gentle opacity transition for refreshed values.
 - Do not animate the tide continuously.
 - Update the current tracking point at a modest interval such as once per minute.

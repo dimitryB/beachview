@@ -302,20 +302,22 @@ is tracked again in Phase 7.
 
 ## Phase 6 — Performance, resilience, and PWA option
 
+**Status: Complete — July 3, 2026 (optional PWA deferred until after the initial web release)**
+
 ### Step 29: Optimize loading
 
-- [ ] Start independent requests concurrently.
-- [ ] Preconnect to provider origins.
-- [ ] Confirm current conditions do not wait for ten-day rendering.
-- [ ] Remove or replace oversized dependencies.
-- [ ] Verify production bundle budgets.
+- [x] Start independent requests concurrently.
+- [x] Preconnect to provider origins.
+- [x] Confirm current conditions do not wait for ten-day rendering.
+- [x] Remove or replace oversized dependencies.
+- [x] Verify production bundle budgets.
 
 ### Step 30: Harden network behavior
 
-- [ ] Test slow, offline, timeout, malformed, and partial responses.
-- [ ] Confirm stale content cannot appear fresh.
-- [ ] Add manual per-section or global refresh behavior.
-- [ ] Prevent rapid repeated refresh calls.
+- [x] Test slow, offline, timeout, malformed, and partial responses.
+- [x] Confirm stale content cannot appear fresh.
+- [x] Add manual per-section or global refresh behavior.
+- [x] Prevent rapid repeated refresh calls.
 
 ### Step 31: Add an installable PWA only if desired
 
@@ -325,6 +327,9 @@ is tracked again in Phase 7.
 - [ ] Test update behavior to avoid a stranded old application build.
 
 PWA support is optional and must not delay a correct responsive web release.
+The initial release will remain a standard static web application. A service
+worker is deferred because an installable shell does not justify the additional
+update and stale-forecast failure modes before the first production release.
 
 ### Phase 6 exit criteria
 

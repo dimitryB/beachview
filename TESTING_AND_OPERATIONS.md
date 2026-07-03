@@ -80,6 +80,11 @@ Critical Playwright flows:
 10. Official alert remains visible in both tabs.
 11. Automated axe scans report no WCAG A/AA violations on both tabs and a partial-provider failure.
 12. Content reflows at a `320 px` CSS viewport and loading animation stops under reduced-motion preference.
+13. A slow provider does not block successful current-condition sections.
+14. Current conditions render while a deferred ten-day presentation chunk is pending.
+15. Offline and failed refreshes retain cached values with stale language.
+16. Malformed provider data remains isolated from valid feeds.
+17. Manual refresh replaces values and advances the provider cache timestamp.
 
 Mock provider responses for deterministic CI. Keep one optional live smoke test separate from required CI.
 
@@ -158,6 +163,8 @@ Test profiles:
 - One slow provider
 
 The application should not wait for the ten-day forecast or NOAA tide response before showing successful primary values.
+`npm run build` also runs the gzip bundle-budget check and fails when the
+initial JavaScript reaches `150 KB` or the initial CSS reaches `30 KB`.
 
 ## 7. Live API smoke checks
 

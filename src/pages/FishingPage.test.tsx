@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 
 import { parseNoaaTidesResponse } from "@/data/noaa-tides";
 import { parseWeatherResponse } from "@/data/open-meteo-weather";
@@ -105,7 +105,7 @@ describe("FishingPage", () => {
     ).toBeInTheDocument();
   });
 
-  it("renders the fishing outlook timeline with movement periods", () => {
+  it("renders the fishing outlook timeline with movement periods", async () => {
     render(
       <FishingPage
         data={data}
@@ -113,9 +113,15 @@ describe("FishingPage", () => {
         onRetryWeather={vi.fn()}
       />,
     );
+    await act(async () => {
+      await import("@/components/forecast/FishingOutlook");
+    });
 
     expect(
-      screen.getByRole("heading", { level: 2, name: "Fishing timeline" }),
+      screen.getByRole("heading", {
+        level: 2,
+        name: "Fishing timeline",
+      }),
     ).toBeInTheDocument();
     expect(screen.getAllByText(/Stronger estimated/).length).toBeGreaterThan(0);
     // The 7:03 PM UTC movement midpoint sits within tolerance of the injected

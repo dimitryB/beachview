@@ -1,10 +1,12 @@
+import { lazy, Suspense } from "react";
+
 import {
   ConditionCard,
   type ConditionAssessment,
 } from "@/components/conditions/ConditionCard";
 import { DataStatus } from "@/components/conditions/DataStatus";
 import { ProviderNotice } from "@/components/conditions/ProviderNotice";
-import { FishingOutlook } from "@/components/forecast/FishingOutlook";
+import { DeferredOutlook } from "@/components/forecast/DeferredOutlook";
 import {
   formatDurationMinutes,
   formatEasternEventTime,
@@ -17,6 +19,11 @@ import { deriveTideState } from "@/domain/tide";
 import { degreesToCardinal } from "@/domain/wind";
 import { useCurrentTime } from "@/hooks/use-current-time";
 import type { BeachDataState } from "@/types/domain";
+
+const FishingOutlook = lazy(async () => {
+  const module = await import("@/components/forecast/FishingOutlook");
+  return { default: module.FishingOutlook };
+});
 
 interface FishingPageProps {
   data: BeachDataState;
@@ -199,12 +206,14 @@ export function FishingPage({
       </section>
 
       <TideChart onRetry={onRetryTides} tides={data.tides} />
-      <FishingOutlook
-        onRetryTides={onRetryTides}
-        onRetryWeather={onRetryWeather}
-        tides={data.tides}
-        weather={data.weather}
-      />
+      <Suspense fallback={<DeferredOutlook activity="fishing" />}>
+        <FishingOutlook
+          onRetryTides={onRetryTides}
+          onRetryWeather={onRetryWeather}
+          tides={data.tides}
+          weather={data.weather}
+        />
+      </Suspense>
     </div>
   );
 }

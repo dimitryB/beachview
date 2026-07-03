@@ -66,7 +66,7 @@ describe("SwimmingPage", () => {
     );
   });
 
-  it("renders the ten-day outlook and predicted tide chart sections", () => {
+  it("renders the ten-day outlook and predicted tide chart sections", async () => {
     render(
       <SwimmingPage
         data={baseState()}
@@ -77,7 +77,7 @@ describe("SwimmingPage", () => {
     );
 
     expect(
-      screen.getByRole("heading", { name: "Late-day swim windows" }),
+      await screen.findByRole("heading", { name: "Late-day swim windows" }),
     ).toBeVisible();
     // Fixture day one has a complete late-day hour but no qualifying window;
     // day two has no late-day hours at all.

@@ -85,10 +85,11 @@ function failedState<T>(
 interface RefreshTracker {
   sequence: number;
   controller: AbortController | null;
+  inFlight: Promise<void> | null;
 }
 
 function createTracker(): RefreshTracker {
-  return { sequence: 0, controller: null };
+  return { sequence: 0, controller: null, inFlight: null };
 }
 
 function fetchWeatherWithSignal(signal: AbortSignal): Promise<WeatherDataset> {
@@ -103,13 +104,16 @@ function fetchTidesWithSignal(signal: AbortSignal): Promise<TideDataset> {
   return fetchNoaaTides((request) => fetchJson({ ...request, signal }));
 }
 
-async function refreshProvider<P extends CacheableSource>(
+function refreshProvider<P extends CacheableSource>(
   provider: P,
   tracker: RefreshTracker,
   fetcher: (signal: AbortSignal) => Promise<CacheDatasetBySource[P]>,
   setState: Dispatch<SetStateAction<ProviderState<CacheDatasetBySource[P]>>>,
 ): Promise<void> {
-  tracker.controller?.abort();
+  if (tracker.inFlight) {
+    return tracker.inFlight;
+  }
+
   tracker.sequence += 1;
 
   const requestId = tracker.sequence;
@@ -118,36 +122,46 @@ async function refreshProvider<P extends CacheableSource>(
 
   setState(refreshingState);
 
-  try {
-    const data = await fetcher(controller.signal);
+  const request = (async () => {
+    try {
+      const data = await fetcher(controller.signal);
 
-    if (requestId !== tracker.sequence) {
-      return;
+      if (requestId !== tracker.sequence) {
+        return;
+      }
+
+      const storage = browserStorage();
+      if (storage) {
+        writeProviderCache(provider, data, data.fetchedAt, storage);
+      }
+
+      setState({
+        status: "fresh",
+        data,
+        error: null,
+        fetchedAt: data.fetchedAt,
+        isRefreshing: false,
+      });
+    } catch (error) {
+      if (requestId !== tracker.sequence) {
+        return;
+      }
+
+      if (error instanceof ProviderError && error.code === "aborted") {
+        return;
+      }
+
+      setState((previous) => failedState(previous, error));
+    } finally {
+      if (requestId === tracker.sequence) {
+        tracker.controller = null;
+        tracker.inFlight = null;
+      }
     }
+  })();
 
-    const storage = browserStorage();
-    if (storage) {
-      writeProviderCache(provider, data, data.fetchedAt, storage);
-    }
-
-    setState({
-      status: "fresh",
-      data,
-      error: null,
-      fetchedAt: data.fetchedAt,
-      isRefreshing: false,
-    });
-  } catch (error) {
-    if (requestId !== tracker.sequence) {
-      return;
-    }
-
-    if (error instanceof ProviderError && error.code === "aborted") {
-      return;
-    }
-
-    setState((previous) => failedState(previous, error));
-  }
+  tracker.inFlight = request;
+  return request;
 }
 
 export interface BeachDataController extends BeachDataState {

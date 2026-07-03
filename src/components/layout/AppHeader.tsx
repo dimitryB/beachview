@@ -32,6 +32,7 @@ export function AppHeader({ isRefreshing, onRefresh }: AppHeaderProps) {
           <span aria-hidden="true">●</span> Metric · Eastern Time
         </p>
         <button
+          aria-busy={isRefreshing}
           className="refresh-button"
           disabled={isRefreshing}
           onClick={onRefresh}

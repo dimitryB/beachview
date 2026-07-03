@@ -151,6 +151,9 @@ Do not use `0` to represent an unavailable value.
 9. Announce only meaningful status changes to assistive technology.
 
 Use `Promise.allSettled`, not `Promise.all`, so one rejected provider does not discard successful results.
+Calls for a provider that is already refreshing return the existing in-flight
+promise. This closes the small interaction window before a refresh control
+becomes disabled and prevents duplicate provider traffic.
 
 ## 7. Caching and freshness
 
@@ -278,12 +281,17 @@ The tab control follows the ARIA tabs pattern or uses ordinary links with clear 
 | Primary data target | `<2 s` under normal provider/network conditions |
 | Layout shift        | Near zero after skeleton render                 |
 
+The production build enforces the JavaScript and CSS limits with
+`scripts/check-bundle-budget.mjs`. On July 3, 2026, the initial entry measured
+`77.18 KB` JavaScript gzip and `4.98 KB` CSS gzip. Swimming and Fishing outlook
+code is emitted as deferred chunks and is excluded from the initial entry.
+
 Implementation tactics:
 
 - Start fetches at application initialization.
 - Avoid large chart, date, icon, and CSS frameworks.
 - Use inline SVG icons or a small curated icon set.
-- Render ten-day detail progressively after current conditions.
+- Load Swimming and Fishing ten-day presentation chunks behind `Suspense` boundaries so current conditions can commit first.
 - Preconnect to the three API origins.
 - Keep the tide calculation and SVG generation local and synchronous.
 
