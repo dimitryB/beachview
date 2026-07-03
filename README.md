@@ -11,7 +11,7 @@ The application is intended to be a lightweight static web app that can run on a
 
 ## Project status
 
-Phases 0 through 3 are complete. The application now has a responsive dark shell; strict normalized weather, marine, and tide data; resilient provider caching; tested derived behavior; semantic Swimming condition flags; and a current Fishing dashboard with predicted tide phase, modeled pressure tendency, and wind details. Provider failures remain isolated with stale, offline, unavailable, and scoped retry states.
+Phases 0 through 5 are implemented. The application now has a responsive dark shell; strict normalized weather, marine, and tide data; resilient provider caching; tested derived behavior; semantic Swimming and Fishing outlooks; an estimated NOAA-bounded tide chart; prominent official safety links; complete source/grid/station provenance; and automated WCAG A/AA checks. Provider failures remain isolated with stale, offline, unavailable, and scoped retry states. Structured NWS alert fetching remains the explicitly deferred first follow-up, and manual screen-reader and `200%` browser-zoom confirmation remain part of release testing.
 
 ## Fixed operating scope
 
@@ -72,4 +72,4 @@ This product summarizes conditions; it does not determine whether swimming is sa
 
 ## Recommended next action
 
-Begin Phase 4 in the [implementation roadmap](IMPLEMENTATION_ROADMAP.md): replace the illustrative tide curve with the estimated NOAA-bounded chart and render the ten-day Swimming and Fishing view models.
+Begin Phase 6 in the [implementation roadmap](IMPLEMENTATION_ROADMAP.md): verify loading and bundle budgets, harden slow/offline refresh behavior, and decide whether installable PWA support is worth adding before release.

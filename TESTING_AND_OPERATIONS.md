@@ -78,6 +78,8 @@ Critical Playwright flows:
 8. Manual refresh updates timestamps.
 9. Mobile forecast cards can be reached by touch-equivalent and keyboard interaction.
 10. Official alert remains visible in both tabs.
+11. Automated axe scans report no WCAG A/AA violations on both tabs and a partial-provider failure.
+12. Content reflows at a `320 px` CSS viewport and loading animation stops under reduced-motion preference.
 
 Mock provider responses for deterministic CI. Keep one optional live smoke test separate from required CI.
 

@@ -279,6 +279,21 @@ Each daily section orders events chronologically:
 
 Candidate cards expose their reasoning rather than showing a mysterious fish score.
 
+### 6.9 Sources, models, and limitations
+
+The source panel follows the selected view and precedes the footer. Its
+collapsed summaries always identify:
+
+- Open-Meteo Weather as a modeled forecast
+- Open-Meteo Marine as a modeled offshore grid
+- NOAA CO-OPS values as predicted high/low tides
+
+Expanded details show the requested and returned Open-Meteo grid coordinates,
+the NOAA Sandbridge station and MLLW datum, provider links, attribution, and the
+distinction between predictions and VABeachCast estimates. Native `details` and
+`summary` elements preserve keyboard and screen-reader behavior without custom
+disclosure scripting.
+
 ## 7. Content rules
 
 ### 7.1 Modeled values

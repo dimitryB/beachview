@@ -1,45 +1,9 @@
 import { expect, test } from "@playwright/test";
 
-import {
-  MARINE_RESPONSE,
-  WEATHER_RESPONSE,
-} from "../src/test/fixtures/providers";
-
-function noaaResponseForToday() {
-  const base = Date.now();
-  const event = (offsetHours: number, height: string, type: "H" | "L") => {
-    const instant = new Date(base + offsetHours * 60 * 60 * 1_000);
-    return {
-      t: instant.toISOString().slice(0, 16).replace("T", " "),
-      v: height,
-      type,
-    };
-  };
-
-  return {
-    predictions: [
-      event(-6, "0.10", "L"),
-      event(0, "1.02", "H"),
-      event(6, "0.08", "L"),
-      event(12, "1.08", "H"),
-      event(18, "0.06", "L"),
-    ],
-  };
-}
+import { mockSuccessfulProviders } from "./provider-mocks";
 
 test.beforeEach(async ({ page }) => {
-  await page.route("https://api.open-meteo.com/**", async (route) => {
-    await route.fulfill({ json: WEATHER_RESPONSE });
-  });
-  await page.route("https://marine-api.open-meteo.com/**", async (route) => {
-    await route.fulfill({ json: MARINE_RESPONSE });
-  });
-  await page.route(
-    "https://api.tidesandcurrents.noaa.gov/**",
-    async (route) => {
-      await route.fulfill({ json: noaaResponseForToday() });
-    },
-  );
+  await mockSuccessfulProviders(page);
 });
 
 test("opens on the Swimming view", async ({ page }) => {
@@ -53,10 +17,9 @@ test("opens on the Swimming view", async ({ page }) => {
       name: "Swimming conditions, without the clutter.",
     }),
   ).toBeVisible();
-  await expect(page.getByRole("link", { name: "Swimming" })).toHaveAttribute(
-    "aria-current",
-    "page",
-  );
+  await expect(
+    page.getByRole("link", { name: "Swimming", exact: true }),
+  ).toHaveAttribute("aria-current", "page");
   await expect(page.getByText("25.7", { exact: true })).toBeVisible();
   await expect(page.getByText("31.8", { exact: true })).toBeVisible();
   await expect(

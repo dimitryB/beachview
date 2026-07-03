@@ -54,6 +54,11 @@ describe("App", () => {
       "aria-current",
       "page",
     );
+    expect(
+      screen.getByRole("heading", {
+        name: "Conditions are not a safety determination.",
+      }),
+    ).toBeVisible();
   });
 
   it("navigates to Fishing without a full page reload", async () => {
@@ -118,5 +123,31 @@ describe("App", () => {
     render(<App />);
     expect(screen.getByText("You’re offline.")).toBeVisible();
     expect(screen.getByText(/Showing saved conditions/)).toBeVisible();
+  });
+
+  it("keeps official safety sources ahead of either activity view", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    const safety = screen.getByRole("complementary");
+    const main = screen.getByRole("main");
+
+    expect(
+      safety.compareDocumentPosition(main) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(
+      screen.getByRole("link", { name: "NWS Wakefield surf forecast" }),
+    ).toHaveAttribute("href", expect.stringContaining("weather.gov"));
+    expect(
+      screen.getByRole("link", { name: "VDH swimming advisories" }),
+    ).toHaveAttribute("href", expect.stringContaining("vdh.virginia.gov"));
+
+    await user.click(screen.getByRole("link", { name: "Fishing" }));
+
+    expect(
+      screen.getByRole("heading", {
+        name: "Conditions are not a safety determination.",
+      }),
+    ).toBeVisible();
   });
 });

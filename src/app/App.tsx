@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 
 import { SafetyNotice } from "@/components/alerts/SafetyNotice";
+import { DataUpdateAnnouncer } from "@/components/conditions/DataUpdateAnnouncer";
 import { OfflineNotice } from "@/components/conditions/OfflineNotice";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { PrimaryNavigation } from "@/components/layout/PrimaryNavigation";
+import { SourceDetails } from "@/components/layout/SourceDetails";
 import { readView, viewHref, type AppView } from "@/app/routes";
 import { useBeachData } from "@/hooks/use-beach-data";
 import { useOnlineStatus } from "@/hooks/use-online-status";
@@ -57,6 +59,7 @@ export function App() {
         Skip to conditions
       </a>
       <div className="app-shell">
+        <DataUpdateAnnouncer data={beachData} />
         <AppHeader
           isRefreshing={
             beachData.weather.isRefreshing ||
@@ -84,25 +87,14 @@ export function App() {
             />
           )}
         </main>
+        <SourceDetails data={beachData} />
         <footer className="site-footer">
           <div className="site-footer__row">
-            <p>Conditions inform your plans; official guidance comes first.</p>
+            <p>VABeachCast · Sandbridge Beach, Virginia Beach</p>
             <p className="site-footer__meta">
               Sandbridge Beach · Metric units · Eastern Time
             </p>
           </div>
-          <p className="site-footer__sources">
-            Weather and marine data by{" "}
-            <a href="https://open-meteo.com/" rel="noreferrer">
-              Open-Meteo
-            </a>{" "}
-            (CC BY 4.0) · Tide predictions by{" "}
-            <a href="https://tidesandcurrents.noaa.gov/" rel="noreferrer">
-              NOAA CO-OPS
-            </a>
-            . Values are modeled or predicted estimates, not on-site
-            observations.
-          </p>
         </footer>
       </div>
     </>

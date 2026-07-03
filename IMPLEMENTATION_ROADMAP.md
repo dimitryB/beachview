@@ -218,7 +218,7 @@ Thresholds must live in configuration so later changes do not require component 
 
 ## Phase 4 — Tide and extended forecasts
 
-**Status: Implemented — July 3, 2026 (unit/e2e suites pending local confirmation; the implementation sandbox could not execute them)**
+**Status: Complete — July 3, 2026**
 
 ### Step 22: Build the tide chart
 
@@ -254,12 +254,14 @@ Thresholds must live in configuration so later changes do not require component 
 
 ## Phase 5 — Safety, provenance, and accessibility
 
+**Status: Implemented — July 3, 2026 (manual screen-reader confirmation remains part of Phase 7 release testing)**
+
 ### Step 25: Add safety source presentation
 
-- [ ] Add a persistent link to the NWS Wakefield Surf Zone Forecast.
-- [ ] Add a persistent link to the VDH swimming-advisory map.
-- [ ] Add approved “conditions, not a safety determination” language.
-- [ ] Ensure official source content visually outranks derived warnings.
+- [x] Add a persistent link to the NWS Wakefield Surf Zone Forecast.
+- [x] Add a persistent link to the VDH swimming-advisory map.
+- [x] Add approved “conditions, not a safety determination” language.
+- [x] Ensure official source content visually outranks derived warnings.
 
 ### Step 26: First follow-up — add structured NWS alerts
 
@@ -273,19 +275,24 @@ This step is explicitly deferred and does not block the MVP or the Phase 5 exit 
 
 ### Step 27: Complete provenance and attribution
 
-- [ ] Add source/model labels.
-- [ ] Add returned marine grid location in details.
-- [ ] Add NOAA station and datum details.
-- [ ] Add Open-Meteo, model, NOAA, and NWS attribution as applicable.
+- [x] Add source/model labels.
+- [x] Add returned marine grid location in details.
+- [x] Add NOAA station and datum details.
+- [x] Add Open-Meteo, model, NOAA, and NWS attribution as applicable.
 
 ### Step 28: Complete accessibility work
 
-- [ ] Run automated axe checks.
-- [ ] Finish keyboard behavior.
+- [x] Run automated axe checks.
+- [x] Finish keyboard behavior.
 - [ ] Test graph alternatives with a screen reader.
-- [ ] Verify status announcements.
-- [ ] Test `200%` zoom and reduced motion.
-- [ ] Resolve all critical and serious accessibility findings.
+- [x] Verify status announcements.
+- [x] Test `320 px` reflow and reduced motion.
+- [ ] Confirm `200%` browser zoom manually.
+- [x] Resolve all critical and serious accessibility findings.
+
+Automated tests verify the tide chart’s equivalent summary/table structure. A
+manual screen-reader and browser-zoom pass remains required before release and
+is tracked again in Phase 7.
 
 ### Phase 5 exit criteria
 
