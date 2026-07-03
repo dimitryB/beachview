@@ -54,6 +54,8 @@ Verify:
 - Metric value, unit, status label, and explanation remain associated.
 - Unavailable data does not render as zero.
 - Cached and stale labels appear correctly.
+- Cached and stale labels show relative age, with the exact Eastern timestamp available as detail.
+- Structurally incomplete or timestamp-invalid cache entries are discarded before rendering.
 - Alert banners precede comfort content.
 - Tabs expose selected/current state.
 - Tide summaries and event tables contain chart-equivalent information.
@@ -88,6 +90,8 @@ Use fixed clocks and include:
 | Fall DST transition               | Repeated local hour remains distinguishable internally     |
 | High tide near local midnight     | Appears on exactly one correct day                         |
 | Ten-day range crossing DST        | Day cards remain ordered and correctly grouped             |
+| App remains open past tide event  | Passed event disappears using the advancing live clock     |
+| Invalid date such as February 30  | Provider payload and cached payload are rejected           |
 
 NOAA fixtures should use GMT output and explicit UTC parsing.
 

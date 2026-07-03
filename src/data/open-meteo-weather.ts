@@ -8,6 +8,7 @@ import {
   expectRecord,
   expectString,
   expectStringArray,
+  parseCalendarDate,
   parseOpenMeteoUtc,
   validationError,
 } from "@/data/validation";
@@ -292,7 +293,11 @@ export function parseWeatherResponse(
     },
     hourly: normalizedHourly,
     solarDays: dailyDates.map((providerDate, index) => ({
-      providerDate,
+      providerDate: parseCalendarDate(
+        providerDate,
+        SOURCE,
+        `daily.time[${index}]`,
+      ),
       sunriseAt: parseOpenMeteoUtc(
         sunrises[index] ?? "",
         SOURCE,

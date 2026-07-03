@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   readProviderCache,
   writeProviderCache,
+  type CacheDatasetBySource,
   type CacheableSource,
   type StorageLike,
 } from "@/data/cache";
@@ -26,9 +27,11 @@ function browserStorage(): StorageLike | null {
   }
 }
 
-function initialState<T>(provider: CacheableSource): ProviderState<T> {
+function initialState<P extends CacheableSource>(
+  provider: P,
+): ProviderState<CacheDatasetBySource[P]> {
   const storage = browserStorage();
-  const cached = storage ? readProviderCache<T>(provider, storage) : null;
+  const cached = storage ? readProviderCache(provider, storage) : null;
 
   if (!cached) {
     return {

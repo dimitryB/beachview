@@ -30,7 +30,7 @@ describe("provider cache", () => {
     const storage = new MemoryStorage();
     writeProviderCache("open-meteo-weather", weather, fetchedAt, storage);
 
-    const cached = readProviderCache<typeof weather>(
+    const cached = readProviderCache(
       "open-meteo-weather",
       storage,
       new Date("2026-07-02T12:15:00.000Z"),
@@ -92,5 +92,43 @@ describe("provider cache", () => {
     expect(
       readProviderCache("open-meteo-weather", incompatibleStorage),
     ).toBeNull();
+  });
+
+  it("discards a version-compatible entry with incomplete nested data", () => {
+    const storage = new MemoryStorage();
+    const key = "vabeachcast:provider:open-meteo-weather";
+    writeProviderCache("open-meteo-weather", weather, fetchedAt, storage);
+
+    const envelope = JSON.parse(storage.getItem(key) ?? "") as {
+      data: {
+        current: Record<string, unknown>;
+      };
+    };
+    envelope.data.current.airTemperatureC = { value: 31.8 };
+    storage.setItem(key, JSON.stringify(envelope));
+
+    expect(readProviderCache("open-meteo-weather", storage)).toBeNull();
+    expect(storage.values.size).toBe(0);
+  });
+
+  it("discards a nested datapoint with a non-canonical timestamp", () => {
+    const storage = new MemoryStorage();
+    const key = "vabeachcast:provider:open-meteo-weather";
+    writeProviderCache("open-meteo-weather", weather, fetchedAt, storage);
+
+    const envelope = JSON.parse(storage.getItem(key) ?? "") as {
+      data: {
+        current: {
+          airTemperatureC: {
+            validAt: string;
+          };
+        };
+      };
+    };
+    envelope.data.current.airTemperatureC.validAt = "2026-07-02Z";
+    storage.setItem(key, JSON.stringify(envelope));
+
+    expect(readProviderCache("open-meteo-weather", storage)).toBeNull();
+    expect(storage.values.size).toBe(0);
   });
 });

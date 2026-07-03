@@ -1,5 +1,6 @@
 import { DataStatus } from "@/components/conditions/DataStatus";
 import { formatEasternEventTime } from "@/components/format";
+import { useCurrentTime } from "@/hooks/use-current-time";
 import type { ProviderState, TideDataset } from "@/types/domain";
 
 interface TidePlaceholderProps {
@@ -7,17 +8,14 @@ interface TidePlaceholderProps {
 }
 
 export function TidePlaceholder({ tides }: TidePlaceholderProps) {
-  const referenceTime = tides.fetchedAt ? Date.parse(tides.fetchedAt) : 0;
+  const currentTime = useCurrentTime();
   const availableEvents = tides.data?.events ?? [];
-  const upcomingEvents = availableEvents
-    .filter(
-      (event) =>
-        referenceTime === 0 ||
-        Date.parse(event.validAt) >= referenceTime - 60 * 60 * 1_000,
-    )
-    .slice(0, 4);
   const shownEvents =
-    upcomingEvents.length > 0 ? upcomingEvents : availableEvents.slice(0, 4);
+    currentTime === null
+      ? []
+      : availableEvents
+          .filter((event) => Date.parse(event.validAt) >= currentTime)
+          .slice(0, 4);
 
   return (
     <section className="panel tide-panel" aria-labelledby="tide-heading">
@@ -84,6 +82,10 @@ export function TidePlaceholder({ tides }: TidePlaceholderProps) {
             </li>
           ))}
         </ol>
+      ) : tides.data && currentTime !== null ? (
+        <p className="tide-events__empty">
+          No upcoming events remain in the cached prediction range.
+        </p>
       ) : null}
     </section>
   );

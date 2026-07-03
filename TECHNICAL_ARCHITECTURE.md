@@ -180,7 +180,7 @@ interface CacheEnvelope<T> {
 }
 ```
 
-If storage is unavailable or corrupt, discard the entry and continue without failing the page.
+If storage is unavailable or corrupt, discard the entry and continue without failing the page. A matching schema version and provider name are not sufficient: cached payloads must pass the complete normalized-domain guards, including every nested datapoint, forecast item, tide event, and timestamp, before they enter application state. Envelope fetch, stale, and expiry times must also match the provider policy.
 
 ## 8. Time handling
 
@@ -189,12 +189,14 @@ Time handling is a high-risk part of this project because the user may view Sand
 Rules:
 
 - Store internal instants as ISO 8601 UTC strings.
+- Accept provider timestamps only when they match the provider's documented shape and survive a calendar-component round trip; do not rely on permissive `Date.parse` normalization.
 - Format every displayed time using `America/New_York`, never the device timezone.
 - Query Open-Meteo weather and marine output in GMT, then format or group it in the Sandbridge timezone.
 - Query NOAA tide output in GMT, parse it explicitly as UTC, then format it for Sandbridge.
 - Request a one-day buffer before and after the visible NOAA range, then filter events by Sandbridge local date.
 - Group forecast hours into days only after converting each instant to the target timezone.
 - Never parse NOAA’s space-separated timestamp with the browser’s implementation-dependent `Date` parser.
+- Use the live current instant for tide-event filtering and reserve `fetchedAt` for freshness and age labels.
 
 Using GMT from NOAA avoids ambiguous local timestamps during the fall daylight-saving transition.
 

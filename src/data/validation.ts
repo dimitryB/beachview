@@ -3,6 +3,77 @@ import type { DataSource, IsoInstant } from "@/types/domain";
 
 export type UnknownRecord = Record<string, unknown>;
 
+const ISO_INSTANT_PATTERN =
+  /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})\.(\d{3})Z$/;
+const CALENDAR_DATE_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
+const OPEN_METEO_UTC_PATTERN =
+  /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?$/;
+const NOAA_UTC_PATTERN = /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2})$/;
+
+function utcInstantFromParts(parts: readonly number[]): IsoInstant | null {
+  const [year, month, day, hour, minute, second = 0] = parts;
+
+  if (
+    year === undefined ||
+    month === undefined ||
+    day === undefined ||
+    hour === undefined ||
+    minute === undefined
+  ) {
+    return null;
+  }
+
+  const date = new Date(0);
+  date.setUTCFullYear(year, month - 1, day);
+  date.setUTCHours(hour, minute, second, 0);
+
+  if (
+    date.getUTCFullYear() !== year ||
+    date.getUTCMonth() !== month - 1 ||
+    date.getUTCDate() !== day ||
+    date.getUTCHours() !== hour ||
+    date.getUTCMinutes() !== minute ||
+    date.getUTCSeconds() !== second
+  ) {
+    return null;
+  }
+
+  return date.toISOString();
+}
+
+function partsFromMatch(match: RegExpMatchArray): number[] {
+  return match
+    .slice(1)
+    .filter((value) => value !== undefined)
+    .map(Number);
+}
+
+export function isStrictIsoInstant(value: unknown): value is IsoInstant {
+  if (typeof value !== "string" || !ISO_INSTANT_PATTERN.test(value)) {
+    return false;
+  }
+
+  const milliseconds = Date.parse(value);
+  return (
+    Number.isFinite(milliseconds) &&
+    new Date(milliseconds).toISOString() === value
+  );
+}
+
+export function isStrictCalendarDate(value: unknown): value is string {
+  if (typeof value !== "string") {
+    return false;
+  }
+
+  const match = value.match(CALENDAR_DATE_PATTERN);
+  if (!match) {
+    return false;
+  }
+
+  const instant = utcInstantFromParts([...partsFromMatch(match), 0, 0, 0]);
+  return instant?.slice(0, 10) === value;
+}
+
 export function validationError(
   provider: DataSource,
   message: string,
@@ -109,16 +180,14 @@ export function parseOpenMeteoUtc(
   provider: DataSource,
   path: string,
 ): IsoInstant {
-  const normalized = value.endsWith("Z")
-    ? value
-    : `${value}${value.length === 16 ? ":00" : ""}Z`;
-  const milliseconds = Date.parse(normalized);
+  const match = value.match(OPEN_METEO_UTC_PATTERN);
+  const instant = match ? utcInstantFromParts(partsFromMatch(match)) : null;
 
-  if (!Number.isFinite(milliseconds)) {
+  if (!instant) {
     throw validationError(provider, `${path} is not a valid GMT timestamp.`);
   }
 
-  return new Date(milliseconds).toISOString();
+  return instant;
 }
 
 export function parseNoaaUtc(
@@ -126,9 +195,24 @@ export function parseNoaaUtc(
   provider: DataSource,
   path: string,
 ): IsoInstant {
-  if (!/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/.test(value)) {
+  const match = value.match(NOAA_UTC_PATTERN);
+  const instant = match ? utcInstantFromParts(partsFromMatch(match)) : null;
+
+  if (!instant) {
     throw validationError(provider, `${path} is not a NOAA GMT timestamp.`);
   }
 
-  return parseOpenMeteoUtc(value.replace(" ", "T"), provider, path);
+  return instant;
+}
+
+export function parseCalendarDate(
+  value: string,
+  provider: DataSource,
+  path: string,
+): string {
+  if (!isStrictCalendarDate(value)) {
+    throw validationError(provider, `${path} is not a valid calendar date.`);
+  }
+
+  return value;
 }

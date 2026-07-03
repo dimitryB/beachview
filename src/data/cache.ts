@@ -1,3 +1,9 @@
+import {
+  isMarineDataset,
+  isTideDataset,
+  isWeatherDataset,
+} from "@/data/domain-guards";
+import { isStrictIsoInstant } from "@/data/validation";
 import type {
   IsoInstant,
   MarineDataset,
@@ -7,6 +13,12 @@ import type {
 
 export type CacheableSource =
   "open-meteo-weather" | "open-meteo-marine" | "noaa-tides";
+
+export interface CacheDatasetBySource {
+  "open-meteo-weather": WeatherDataset;
+  "open-meteo-marine": MarineDataset;
+  "noaa-tides": TideDataset;
+}
 
 export interface StorageLike {
   getItem(key: string): string | null;
@@ -60,48 +72,18 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function isDatasetForProvider(
+function isDatasetForProvider<P extends CacheableSource>(
   value: unknown,
-  provider: CacheableSource,
-): value is WeatherDataset | MarineDataset | TideDataset {
-  if (
-    !isRecord(value) ||
-    value.source !== provider ||
-    !isIsoInstant(value.fetchedAt)
-  ) {
-    return false;
+  provider: P,
+): value is CacheDatasetBySource[P] {
+  switch (provider) {
+    case "open-meteo-weather":
+      return isWeatherDataset(value);
+    case "open-meteo-marine":
+      return isMarineDataset(value);
+    case "noaa-tides":
+      return isTideDataset(value);
   }
-
-  if (provider === "open-meteo-weather") {
-    return (
-      isRecord(value.grid) &&
-      isRecord(value.current) &&
-      Array.isArray(value.hourly) &&
-      Array.isArray(value.solarDays)
-    );
-  }
-
-  if (provider === "open-meteo-marine") {
-    return (
-      isRecord(value.grid) &&
-      isRecord(value.current) &&
-      Array.isArray(value.hourly)
-    );
-  }
-
-  return (
-    typeof value.stationId === "string" &&
-    value.datum === "MLLW" &&
-    Array.isArray(value.events)
-  );
-}
-
-function isIsoInstant(value: unknown): value is IsoInstant {
-  return (
-    typeof value === "string" &&
-    value.length > 0 &&
-    Number.isFinite(Date.parse(value))
-  );
 }
 
 function removeQuietly(storage: StorageLike, key: string): void {
@@ -112,11 +94,11 @@ function removeQuietly(storage: StorageLike, key: string): void {
   }
 }
 
-export function readProviderCache<T>(
-  provider: CacheableSource,
+export function readProviderCache<P extends CacheableSource>(
+  provider: P,
   storage: StorageLike,
   now = new Date(),
-): CachedValue<T> | null {
+): CachedValue<CacheDatasetBySource[P]> | null {
   const key = cacheKey(provider);
   let raw: string | null;
 
@@ -137,10 +119,28 @@ export function readProviderCache<T>(
       !isRecord(parsed) ||
       parsed.schemaVersion !== CACHE_SCHEMA_VERSION ||
       parsed.provider !== provider ||
-      !isIsoInstant(parsed.fetchedAt) ||
-      !isIsoInstant(parsed.staleAt) ||
-      !isIsoInstant(parsed.expiresAt) ||
+      !isStrictIsoInstant(parsed.fetchedAt) ||
+      !isStrictIsoInstant(parsed.staleAt) ||
+      !isStrictIsoInstant(parsed.expiresAt) ||
       !isDatasetForProvider(parsed.data, provider)
+    ) {
+      removeQuietly(storage, key);
+      return null;
+    }
+
+    const policy = CACHE_POLICIES[provider];
+    const fetchedAtMs = Date.parse(parsed.fetchedAt);
+    const expectedStaleAt = new Date(
+      fetchedAtMs + policy.staleAfterMs,
+    ).toISOString();
+    const expectedExpiresAt = new Date(
+      fetchedAtMs + policy.expireAfterMs,
+    ).toISOString();
+
+    if (
+      parsed.data.fetchedAt !== parsed.fetchedAt ||
+      parsed.staleAt !== expectedStaleAt ||
+      parsed.expiresAt !== expectedExpiresAt
     ) {
       removeQuietly(storage, key);
       return null;
@@ -152,7 +152,7 @@ export function readProviderCache<T>(
     }
 
     return {
-      data: parsed.data as T,
+      data: parsed.data,
       fetchedAt: parsed.fetchedAt,
       freshness:
         now.getTime() >= Date.parse(parsed.staleAt) ? "stale" : "fresh",
@@ -163,20 +163,24 @@ export function readProviderCache<T>(
   }
 }
 
-export function writeProviderCache<T>(
-  provider: CacheableSource,
-  data: T,
+export function writeProviderCache<P extends CacheableSource>(
+  provider: P,
+  data: CacheDatasetBySource[P],
   fetchedAt: IsoInstant,
   storage: StorageLike,
 ): void {
   const policy = CACHE_POLICIES[provider];
   const fetchedAtMs = Date.parse(fetchedAt);
 
-  if (!Number.isFinite(fetchedAtMs)) {
+  if (
+    !isStrictIsoInstant(fetchedAt) ||
+    !isDatasetForProvider(data, provider) ||
+    data.fetchedAt !== fetchedAt
+  ) {
     return;
   }
 
-  const envelope: CacheEnvelope<T> = {
+  const envelope: CacheEnvelope<CacheDatasetBySource[P]> = {
     schemaVersion: CACHE_SCHEMA_VERSION,
     provider,
     fetchedAt,
