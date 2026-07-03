@@ -171,76 +171,80 @@ Thresholds must live in configuration so later changes do not require component 
 
 ## Phase 3 — Application shell and current conditions
 
+**Status: Complete — July 2, 2026**
+
 ### Step 17: Implement design tokens and global layout
 
-- [ ] Add dark color, type, spacing, radius, and focus tokens.
-- [ ] Declare `color-scheme: dark`.
-- [ ] Add global landmarks, skip link, maximum width, and responsive grid.
-- [ ] Verify base color contrast.
+- [x] Add dark color, type, spacing, radius, and focus tokens.
+- [x] Declare `color-scheme: dark`.
+- [x] Add global landmarks, skip link, maximum width, and responsive grid.
+- [x] Verify base color contrast.
 
 ### Step 18: Implement navigation
 
-- [ ] Add Swimming and Fishing links/tabs.
-- [ ] Default unknown/missing view values to Swimming.
-- [ ] Keep the selected view in the query string.
-- [ ] Test keyboard and browser back/forward behavior.
+- [x] Add Swimming and Fishing links/tabs.
+- [x] Default unknown/missing view values to Swimming.
+- [x] Keep the selected view in the query string.
+- [x] Test keyboard and browser back/forward behavior.
 
 ### Step 19: Implement shared loading and error components
 
-- [ ] Add layout-stable skeletons.
-- [ ] Add stale, offline, retry, and unavailable messages.
-- [ ] Add freshness badges and source details.
-- [ ] Avoid a page-level all-or-nothing spinner.
+- [x] Add layout-stable skeletons.
+- [x] Add stale, offline, retry, and unavailable messages.
+- [x] Add freshness badges and source details.
+- [x] Avoid a page-level all-or-nothing spinner.
 
 ### Step 20: Implement Swimming current conditions
 
-- [ ] Add primary air/water card.
-- [ ] Add wave height and period cards.
-- [ ] Add wind speed/direction/gust card.
-- [ ] Add status icons, labels, and explanations.
-- [ ] Add current update time and provider details.
+- [x] Add primary air/water card.
+- [x] Add wave height and period cards.
+- [x] Add wind speed/direction/gust card.
+- [x] Add status icons, labels, and explanations.
+- [x] Add current update time and provider details.
 
 ### Step 21: Implement Fishing current conditions
 
-- [ ] Add predicted tide phase and next event.
-- [ ] Add wind and gust.
-- [ ] Add pressure and three-hour tendency.
-- [ ] Keep marine comfort language out of the fishing layout.
+- [x] Add predicted tide phase and next event.
+- [x] Add wind and gust.
+- [x] Add pressure and three-hour tendency.
+- [x] Keep marine comfort language out of the fishing layout.
 
 ### Phase 3 exit criteria
 
-- Both tabs render from mocked and live normalized data.
-- Mobile and desktop current-condition layouts work.
-- Every status has a non-color cue.
-- Partial failures are understandable and recoverable.
+- [x] Both tabs render from mocked and live normalized data.
+- [x] Mobile and desktop current-condition layouts work.
+- [x] Every status has a non-color cue.
+- [x] Partial failures are understandable and recoverable.
 
 ## Phase 4 — Tide and extended forecasts
 
+**Status: Implemented — July 3, 2026 (unit/e2e suites pending local confirmation; the implementation sandbox could not execute them)**
+
 ### Step 22: Build the tide chart
 
-- [ ] Define stable SVG scales and margins.
-- [ ] Render the estimated curve.
-- [ ] Render high/low event markers and labels.
-- [ ] Render the current-time rule and tracking point.
-- [ ] Handle chart edges, negative heights, and missing bounding events.
-- [ ] Add phase summary and event-table alternative.
-- [ ] Update the tracking point once per minute.
+- [x] Define stable SVG scales and margins.
+- [x] Render the estimated curve.
+- [x] Render high/low event markers and labels.
+- [x] Render the current-time rule and tracking point.
+- [x] Handle chart edges, negative heights, and missing bounding events.
+- [x] Add phase summary and event-table alternative.
+- [x] Update the tracking point once per minute.
 
 ### Step 23: Build the Swimming outlook
 
-- [ ] Create ten local-day cards.
-- [ ] Show only water temperature, wave height, and wind speed.
-- [ ] Highlight qualifying late-day blocks.
-- [ ] Explain why a block qualifies.
-- [ ] Provide “no complete match” and incomplete-data states.
+- [x] Create ten local-day cards.
+- [x] Show only water temperature, wave height, and wind speed.
+- [x] Highlight qualifying late-day blocks.
+- [x] Explain why a block qualifies.
+- [x] Provide “no complete match” and incomplete-data states.
 
 ### Step 24: Build the Fishing outlook
 
-- [ ] Show daily high/low events and tide ranges.
-- [ ] Show stronger-movement candidate periods.
-- [ ] Attach wind behavior and pressure tendency.
-- [ ] Highlight material wind shifts.
-- [ ] Use chronological timelines on mobile and compact daily groups on desktop.
+- [x] Show daily high/low events and tide ranges.
+- [x] Show stronger-movement candidate periods.
+- [x] Attach wind behavior and pressure tendency.
+- [x] Highlight material wind shifts.
+- [x] Use chronological timelines on mobile and compact daily groups on desktop.
 
 ### Phase 4 exit criteria
 

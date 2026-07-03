@@ -11,7 +11,7 @@ The application is intended to be a lightweight static web app that can run on a
 
 ## Project status
 
-Phases 0 through 2 are complete. The application now has a responsive dark shell; strict normalized weather, marine, and tide data; resilient provider caching; and tested derived behavior for wind shifts, pressure tendency, tide phase and height estimation, swim comfort rules, late-day swim windows, and fishing timelines.
+Phases 0 through 3 are complete. The application now has a responsive dark shell; strict normalized weather, marine, and tide data; resilient provider caching; tested derived behavior; semantic Swimming condition flags; and a current Fishing dashboard with predicted tide phase, modeled pressure tendency, and wind details. Provider failures remain isolated with stale, offline, unavailable, and scoped retry states.
 
 ## Fixed operating scope
 
@@ -72,4 +72,4 @@ This product summarizes conditions; it does not determine whether swimming is sa
 
 ## Recommended next action
 
-Begin Phase 3 in the [implementation roadmap](IMPLEMENTATION_ROADMAP.md): connect the completed derived behavior to current-condition cards, semantic status flags, and the Fishing dashboard.
+Begin Phase 4 in the [implementation roadmap](IMPLEMENTATION_ROADMAP.md): replace the illustrative tide curve with the estimated NOAA-bounded chart and render the ten-day Swimming and Fishing view models.

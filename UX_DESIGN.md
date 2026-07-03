@@ -114,6 +114,8 @@ Initial palette:
 
 All final foreground/background pairs must pass automated and manual WCAG AA contrast checks. The palette is a starting point, not proof of compliance.
 
+Phase 3 token verification found `17.34:1` for primary text on the page background, `7.53:1` for muted text on raised surfaces, and at least `5.40:1` for the semantic accent text on raised surfaces. Component-level and final manual contrast checks remain part of release testing.
+
 Status colors always have a redundant cue:
 
 - Danger: octagonal or alert icon plus “High waves,” “Choppy,” or official headline

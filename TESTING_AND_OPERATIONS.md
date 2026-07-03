@@ -52,6 +52,8 @@ Tests assert normalized domain output, not snapshots of the entire provider payl
 Verify:
 
 - Metric value, unit, status label, and explanation remain associated.
+- Current Swimming cards expose each configured flag with a non-color cue.
+- Current Fishing cards expose predicted tide phase, modeled wind, and modeled pressure tendency without comfort language.
 - Unavailable data does not render as zero.
 - Cached and stale labels appear correctly.
 - Cached and stale labels show relative age, with the exact Eastern timestamp available as detail.
@@ -60,6 +62,7 @@ Verify:
 - Tabs expose selected/current state.
 - Tide summaries and event tables contain chart-equivalent information.
 - Retry actions call only the affected provider when appropriate.
+- Offline state explains that saved values may be shown.
 
 ### 2.4 Browser tests
 

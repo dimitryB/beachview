@@ -251,8 +251,11 @@ Expected presentation:
 | Fresh                 | Normal content and updated time                               |
 | Refreshing with cache | Existing content plus subtle refresh indicator                |
 | Stale                 | Existing content, stale badge, failed-refresh message         |
-| Error with no cache   | Compact error and retry action                                |
+| Error with no cache   | Compact provider-specific error and scoped retry action       |
 | Partial data          | Render available metrics and mark missing metrics unavailable |
+| Browser offline       | Explain saved-data fallback without hiding available sections |
+
+Current-condition cards preserve three distinct concepts: provider state, semantic condition state, and provenance. Provider state controls loading/stale/error presentation; semantic state supplies a text label, icon, explanation, and redundant color treatment; provenance supplies modeled/predicted wording and the Eastern valid time. A provider retry calls only that provider, while the header refresh remains the explicit all-provider action.
 
 ## 11. Routing
 
