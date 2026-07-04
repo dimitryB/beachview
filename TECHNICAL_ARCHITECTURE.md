@@ -10,6 +10,7 @@ The browser retrieves public weather, marine, and tide data directly. No credent
 flowchart LR
     U["Mobile or desktop browser"] --> APP["VABeachCast static SPA"]
     APP --> CACHE["Versioned browser cache"]
+    APP --> PREFS["Versioned local recommendation preferences"]
     APP --> W["Open-Meteo Weather"]
     APP --> M["Open-Meteo Marine"]
     APP --> T["NOAA CO-OPS tides"]
@@ -76,6 +77,7 @@ src/
     tide/
   config/
     location.ts
+    recommendation-config.ts
     rules.ts
   data/
     cache.ts
@@ -94,6 +96,7 @@ src/
   hooks/
     use-beach-data.ts
   pages/
+    ConfigPage.tsx
     FishingPage.tsx
     SwimmingPage.tsx
   styles/
@@ -234,6 +237,11 @@ Derived behavior is implemented as pure modules under `src/domain/`:
 - `fishing.ts` generates tide ranges, stronger estimated-movement windows, and chronological daily timelines.
 
 Thresholds remain in `src/config/rules.ts`; React components do not reimplement rule comparisons.
+Pure domain functions accept an explicit validated `SwimRules` value, defaulting
+to the factory rules for tests and non-UI callers. `App` owns the active rule
+set, loads it through `src/config/recommendation-config.ts`, and passes it to
+both activity views. Invalid or unavailable `localStorage` never enters domain
+logic.
 
 Each independent section uses:
 
@@ -262,10 +270,11 @@ Current-condition cards preserve three distinct concepts: provider state, semant
 
 ## 11. Routing
 
-Use two stable routes:
+Use three stable routes:
 
 - `/` or `/?view=swimming`
 - `/?view=fishing`
+- `/?view=config`
 
 A query parameter is friendlier to static hosts than history-fallback routes. Unknown values fall back to Swimming.
 
@@ -298,6 +307,8 @@ Implementation tactics:
 ## 13. Security and privacy
 
 - There are no user accounts or secrets.
+- Recommendation preferences are stored only in browser `localStorage`; they
+  are not sent to a project backend.
 - No precise device location is requested.
 - Do not add analytics by default.
 - Escape provider text before rendering; never inject raw alert HTML.

@@ -15,6 +15,20 @@ export const BEACH = {
 
 These values are application configuration, not user preferences.
 
+### 1.1 Recommendation preferences
+
+`SWIM_RULES` contains the factory defaults for comfort flags and candidate-window decisions. The Config view lets the user replace these thresholds locally. A versioned `vabeachcast:recommendation-config` entry stores the complete validated rule set in browser `localStorage`; no provider payload or official warning is changed.
+
+Stored values must be finite, inside the input-specific bounds, and satisfy these relationships:
+
+- Cold-water threshold is lower than the warm-water threshold.
+- Wind and gust warning thresholds do not exceed their corresponding strong thresholds.
+- Lower-exposure UV and radiation values do not exceed their warning values.
+- Midday start is not later than midday end.
+- Time-window hours and minimum duration are whole numbers.
+
+Missing, corrupt, incompatible, or invalid storage uses the factory defaults. Restoring defaults removes the stored preference entry.
+
 ## 2. Source catalog
 
 | Provider                      | Purpose                                                   | Data character                                  |
@@ -222,7 +236,7 @@ The UI must expose `t0`, `h0`, `t1`, and `h1` as official predicted events and i
 
 Rules are evaluated per forecast hour. Each metric returns a semantic state and explanation rather than only a color.
 
-### 10.1 Approved requirement thresholds
+### 10.1 Default requirement thresholds
 
 | Metric            | Rule     | State            |
 | ----------------- | -------- | ---------------- |
@@ -233,7 +247,7 @@ Rules are evaluated per forecast hour. Each metric returns a semantic state and 
 
 At exactly `1.0 m`, wave height does not trigger the red rule. At exactly `7 s`, period does not trigger the red rule. Boundary tests must preserve those semantics.
 
-### 10.2 Approved wind thresholds
+### 10.2 Default wind thresholds
 
 | Metric         | Rule        | State                   |
 | -------------- | ----------- | ----------------------- |
@@ -242,16 +256,16 @@ At exactly `1.0 m`, wave height does not trigger the red rule. At exactly `7 s`,
 | Sustained wind | `>=35 km/h` | Red: strong wind        |
 | Wind gust      | `>=50 km/h` | Red: strong gusts       |
 
-### 10.3 Exposure thresholds
+### 10.3 Default exposure thresholds
 
 | Metric           | Initial rule                    | State                          |
 | ---------------- | ------------------------------- | ------------------------------ |
 | UV               | `>=6`                           | Strong exposure warning        |
 | Direct radiation | `>=500 W/m²` during 11:00–15:00 | Direct midday exposure warning |
 
-The approved wind thresholds remain configurable because blowing sand depends on grain size, moisture, and beach conditions. The warning value is informed by the Beaufort 4 range in which dust and loose material begin to lift, not by a Sandbridge-specific sand study. See the [NWS Beaufort scale](https://www.weather.gov/crp/BeaufortScale).
+All thresholds in sections 10 and 11 are user-configurable from the Config view. The default wind values remain configurable because blowing sand depends on grain size, moisture, and beach conditions. The warning value is informed by the Beaufort 4 range in which dust and loose material begin to lift, not by a Sandbridge-specific sand study. See the [NWS Beaufort scale](https://www.weather.gov/crp/BeaufortScale).
 
-The approved warm-water state is an alert above `24°C`. It must not be described as a general medical or surf hazard.
+The default warm-water state is an alert above `24°C`. It must not be described as a general medical or surf hazard.
 
 ## 11. Late-day swim windows
 

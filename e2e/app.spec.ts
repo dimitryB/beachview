@@ -77,6 +77,37 @@ test("switches to the Fishing view", async ({ page }) => {
   ).toBeVisible();
 });
 
+test("saves recommendation config and reapplies it after reload", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page.getByRole("link", { name: "Config" }).click();
+
+  await expect(page).toHaveURL(/\?view=config$/);
+  const waveInput = page.getByRole("spinbutton", {
+    name: "High-wave threshold",
+  });
+  await waveInput.fill("0.4");
+  await page.getByRole("button", { name: "Save preferences" }).click();
+  await expect(page.getByText("Using your values")).toBeVisible();
+
+  await page.getByRole("link", { name: "Swimming", exact: true }).click();
+  await expect(
+    page
+      .getByRole("region", { name: "Current modeled conditions" })
+      .locator(".condition-state--danger")
+      .getByText("High waves"),
+  ).toBeVisible();
+
+  await page.reload();
+  await expect(
+    page
+      .getByRole("region", { name: "Current modeled conditions" })
+      .locator(".condition-state--danger")
+      .getByText("High waves"),
+  ).toBeVisible();
+});
+
 test("keeps weather visible when the marine provider fails", async ({
   page,
 }) => {
@@ -141,5 +172,14 @@ test("current conditions fit a 320 px viewport without page overflow", async ({
   }));
   expect(fishingDimensions.scrollWidth).toBeLessThanOrEqual(
     fishingDimensions.clientWidth,
+  );
+
+  await page.getByRole("link", { name: "Config" }).click();
+  const configDimensions = await page.evaluate(() => ({
+    clientWidth: document.documentElement.clientWidth,
+    scrollWidth: document.documentElement.scrollWidth,
+  }));
+  expect(configDimensions.scrollWidth).toBeLessThanOrEqual(
+    configDimensions.clientWidth,
   );
 });

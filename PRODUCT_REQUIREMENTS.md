@@ -69,6 +69,7 @@ No location picker is required.
 
 - Swimming is the initial route and selected tab.
 - Fishing is reachable through a persistent tab control.
+- Config is reachable through the same persistent navigation.
 - The selected tab is represented in the URL so a view can be bookmarked.
 - Browser back/forward navigation preserves expected tab behavior.
 
@@ -104,6 +105,15 @@ Every data section displays:
 
 A failed provider must not blank the entire application. Each major section has independent loading, stale, error, and unavailable states.
 
+### G-07 Local recommendation configuration
+
+- A Config view exposes the comfort thresholds defined in [Data Sources and Decision Rules](DATA_AND_RULES.md).
+- Valid changes are stored in browser `localStorage` and apply to current comfort flags, late-day swim matches, and the strong-wind gate for fishing candidate windows.
+- Preferences remain local to the current browser and device; no account or backend is added.
+- Corrupt, incompatible, invalid, or unavailable storage falls back to the documented defaults without breaking the application.
+- Users can restore every threshold to its factory default.
+- Configuration must not change official provider data, tide predictions, or safety precedence.
+
 ## 6. Swimming requirements
 
 ### S-01 Current air and sea conditions
@@ -120,10 +130,10 @@ Show:
 
 Apply the rule definitions in [Data Sources and Decision Rules](DATA_AND_RULES.md). At minimum:
 
-- Wave height above `1.0 m` is red.
-- Wave period below `7 s` is red and described as choppy.
-- Water below `20°C` receives a cold warning.
-- Water above `24°C` receives a warm-water alert.
+- Wave height above the configured threshold is red; the default is `1.0 m`.
+- Wave period below the configured threshold is red and described as choppy; the default is `7 s`.
+- Water below the configured threshold receives a cold warning; the default is `20°C`.
+- Water above the configured threshold receives a warm-water alert; the default is `24°C`.
 - Wind receives a sand/discomfort warning at the approved configured threshold.
 - Strong direct midday exposure is unfavorable.
 - Overcast or lower-exposure late-afternoon/evening periods can qualify as ideal when marine conditions also pass.
@@ -260,12 +270,13 @@ Open-Meteo currently requires attribution and limits its free noncommercial API 
 
 ### Included
 
-- Responsive dark shell and two tabs
+- Responsive dark shell with Swimming, Fishing, and Config navigation
 - Open-Meteo weather and marine data
 - NOAA Sandbridge tide predictions
 - Derived comfort and fishing signals
 - Tide chart and ten-day views
 - Browser cache, stale states, source attribution, and manual refresh
+- Browser-local recommendation configuration with validation and reset
 - Prominent official safety links
 
 ### First follow-up
@@ -276,7 +287,6 @@ Open-Meteo currently requires attribution and limits its free noncommercial API 
 
 - Robust parsing of the NWS Wakefield Surf Zone Forecast
 - Installable PWA and offline application shell
-- User-adjustable comfort thresholds stored locally
 - Species- or fishing-method profiles
 - Optional comparison against a nearby observation buoy
 
@@ -284,7 +294,7 @@ Open-Meteo currently requires attribution and limits its free noncommercial API 
 
 The MVP is acceptable when:
 
-1. It always opens on Swimming and can deep-link to Fishing.
+1. It always opens on Swimming and can deep-link to Fishing or Config.
 2. Every visible measurement is metric.
 3. Current weather, marine conditions, and tide events can load independently.
 4. Exact NOAA high/low predictions are distinct from the estimated curve.

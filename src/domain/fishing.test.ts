@@ -3,6 +3,7 @@ import {
   buildMovementWindows,
   calculateTideRanges,
 } from "@/domain/fishing";
+import { SWIM_RULES } from "@/config/rules";
 import { localDateForInstant } from "@/domain/time";
 import type {
   OfficialAlert,
@@ -119,6 +120,18 @@ describe("fishing signals", () => {
           windSpeedKmh: 35,
         }),
       ],
+    )[0];
+
+    expect(window?.isCandidate).toBe(false);
+    expect(window?.explanation).toContain("reaches");
+  });
+
+  it("uses the configured strong-wind threshold for candidates", () => {
+    const window = buildMovementWindows(
+      [low, high],
+      [weatherHour("2026-07-02T15:00:00.000Z")],
+      [],
+      { ...SWIM_RULES, windStrongAtKmh: 20 },
     )[0];
 
     expect(window?.isCandidate).toBe(false);

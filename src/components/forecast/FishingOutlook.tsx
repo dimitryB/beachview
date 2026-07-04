@@ -9,6 +9,7 @@ import {
   type FishingMovementWindow,
   type FishingTimelineEntry,
 } from "@/domain/fishing";
+import { SWIM_RULES, type SwimRules } from "@/config/rules";
 import { localDateForInstant } from "@/domain/time";
 import type { WindShift } from "@/domain/wind";
 import { useCurrentTime } from "@/hooks/use-current-time";
@@ -255,6 +256,7 @@ interface FishingOutlookProps {
   alerts?: readonly OfficialAlert[];
   onRetryTides: () => void;
   onRetryWeather: () => void;
+  rules?: Readonly<SwimRules>;
   tides: ProviderState<TideDataset>;
   weather: ProviderState<WeatherDataset>;
 }
@@ -263,6 +265,7 @@ export function FishingOutlook({
   alerts = NO_ALERTS,
   onRetryTides,
   onRetryWeather,
+  rules = SWIM_RULES,
   tides,
   weather,
 }: FishingOutlookProps) {
@@ -285,9 +288,10 @@ export function FishingOutlook({
             // day (or a dataset) changes, not on every clock tick.
             `${todayLocalDate}T12:00:00.000Z`,
             alerts,
+            rules,
           )
         : [],
-    [alerts, tideDataset, todayLocalDate, weatherHours],
+    [alerts, rules, tideDataset, todayLocalDate, weatherHours],
   );
   const isLoading =
     currentTime === null ||

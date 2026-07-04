@@ -1,5 +1,5 @@
 import { BEACH } from "@/config/location";
-import { SWIM_RULES } from "@/config/rules";
+import { SWIM_RULES, type SwimRules } from "@/config/rules";
 import { zonedDateTimeParts } from "@/domain/time";
 
 export type ComfortTone =
@@ -48,17 +48,20 @@ function unavailable(
   };
 }
 
-export function assessWaveHeight(value: number | null): ComfortAssessment {
+export function assessWaveHeight(
+  value: number | null,
+  rules: Readonly<SwimRules> = SWIM_RULES,
+): ComfortAssessment {
   if (value === null || !Number.isFinite(value)) {
     return unavailable("wave-height", "Wave-height");
   }
 
-  if (value > SWIM_RULES.waveHeightRedAboveM) {
+  if (value > rules.waveHeightRedAboveM) {
     return {
       metric: "wave-height",
       tone: "danger",
       label: "High waves",
-      explanation: `Above the configured ${SWIM_RULES.waveHeightRedAboveM.toFixed(1)} m threshold.`,
+      explanation: `Above the configured ${rules.waveHeightRedAboveM.toFixed(1)} m threshold.`,
     };
   }
 
@@ -66,21 +69,24 @@ export function assessWaveHeight(value: number | null): ComfortAssessment {
     metric: "wave-height",
     tone: "neutral",
     label: "Below high-wave threshold",
-    explanation: `At or below ${SWIM_RULES.waveHeightRedAboveM.toFixed(1)} m.`,
+    explanation: `At or below ${rules.waveHeightRedAboveM.toFixed(1)} m.`,
   };
 }
 
-export function assessWavePeriod(value: number | null): ComfortAssessment {
+export function assessWavePeriod(
+  value: number | null,
+  rules: Readonly<SwimRules> = SWIM_RULES,
+): ComfortAssessment {
   if (value === null || !Number.isFinite(value)) {
     return unavailable("wave-period", "Wave-period");
   }
 
-  if (value < SWIM_RULES.wavePeriodRedBelowS) {
+  if (value < rules.wavePeriodRedBelowS) {
     return {
       metric: "wave-period",
       tone: "danger",
       label: "Choppy",
-      explanation: `Below the configured ${SWIM_RULES.wavePeriodRedBelowS} s period threshold.`,
+      explanation: `Below the configured ${rules.wavePeriodRedBelowS} s period threshold.`,
     };
   }
 
@@ -88,32 +94,33 @@ export function assessWavePeriod(value: number | null): ComfortAssessment {
     metric: "wave-period",
     tone: "neutral",
     label: "Longer-period waves",
-    explanation: `At or above ${SWIM_RULES.wavePeriodRedBelowS} s.`,
+    explanation: `At or above ${rules.wavePeriodRedBelowS} s.`,
   };
 }
 
 export function assessWaterTemperature(
   value: number | null,
+  rules: Readonly<SwimRules> = SWIM_RULES,
 ): ComfortAssessment {
   if (value === null || !Number.isFinite(value)) {
     return unavailable("water-temperature", "Water-temperature");
   }
 
-  if (value < SWIM_RULES.waterColdBelowC) {
+  if (value < rules.waterColdBelowC) {
     return {
       metric: "water-temperature",
       tone: "warning",
       label: "Cold water",
-      explanation: `Below the configured ${SWIM_RULES.waterColdBelowC}°C comfort threshold.`,
+      explanation: `Below the configured ${rules.waterColdBelowC}°C comfort threshold.`,
     };
   }
 
-  if (value > SWIM_RULES.waterWarmAboveC) {
+  if (value > rules.waterWarmAboveC) {
     return {
       metric: "water-temperature",
       tone: "alert",
       label: "Warm-water alert",
-      explanation: `Above the configured ${SWIM_RULES.waterWarmAboveC}°C preference threshold; this is not a general hazard classification.`,
+      explanation: `Above the configured ${rules.waterWarmAboveC}°C preference threshold; this is not a general hazard classification.`,
     };
   }
 
@@ -121,13 +128,14 @@ export function assessWaterTemperature(
     metric: "water-temperature",
     tone: "neutral",
     label: "Moderate water temperature",
-    explanation: `Between ${SWIM_RULES.waterColdBelowC}°C and ${SWIM_RULES.waterWarmAboveC}°C inclusive.`,
+    explanation: `Between ${rules.waterColdBelowC}°C and ${rules.waterWarmAboveC}°C inclusive.`,
   };
 }
 
 export function assessWind(
   sustainedKmh: number | null,
   gustKmh: number | null,
+  rules: Readonly<SwimRules> = SWIM_RULES,
 ): ComfortAssessment {
   if (
     sustainedKmh === null ||
@@ -139,29 +147,27 @@ export function assessWind(
   }
 
   if (
-    sustainedKmh >= SWIM_RULES.windStrongAtKmh ||
-    gustKmh >= SWIM_RULES.windGustStrongAtKmh
+    sustainedKmh >= rules.windStrongAtKmh ||
+    gustKmh >= rules.windGustStrongAtKmh
   ) {
     return {
       metric: "wind",
       tone: "danger",
       label:
-        gustKmh >= SWIM_RULES.windGustStrongAtKmh
-          ? "Strong gusts"
-          : "Strong wind",
-      explanation: `At or above ${SWIM_RULES.windStrongAtKmh} km/h sustained or ${SWIM_RULES.windGustStrongAtKmh} km/h gusts.`,
+        gustKmh >= rules.windGustStrongAtKmh ? "Strong gusts" : "Strong wind",
+      explanation: `At or above ${rules.windStrongAtKmh} km/h sustained or ${rules.windGustStrongAtKmh} km/h gusts.`,
     };
   }
 
   if (
-    sustainedKmh >= SWIM_RULES.windWarningAtKmh ||
-    gustKmh >= SWIM_RULES.windGustWarningAtKmh
+    sustainedKmh >= rules.windWarningAtKmh ||
+    gustKmh >= rules.windGustWarningAtKmh
   ) {
     return {
       metric: "wind",
       tone: "warning",
       label: "Blowing-sand discomfort",
-      explanation: `At or above ${SWIM_RULES.windWarningAtKmh} km/h sustained or ${SWIM_RULES.windGustWarningAtKmh} km/h gusts.`,
+      explanation: `At or above ${rules.windWarningAtKmh} km/h sustained or ${rules.windGustWarningAtKmh} km/h gusts.`,
     };
   }
 
@@ -174,17 +180,20 @@ export function assessWind(
   };
 }
 
-export function assessUv(value: number | null): ComfortAssessment {
+export function assessUv(
+  value: number | null,
+  rules: Readonly<SwimRules> = SWIM_RULES,
+): ComfortAssessment {
   if (value === null || !Number.isFinite(value)) {
     return unavailable("uv", "UV");
   }
 
-  if (value >= SWIM_RULES.uvWarningAt) {
+  if (value >= rules.uvWarningAt) {
     return {
       metric: "uv",
       tone: "warning",
       label: "Strong UV exposure",
-      explanation: `UV index is at or above ${SWIM_RULES.uvWarningAt}.`,
+      explanation: `UV index is at or above ${rules.uvWarningAt}.`,
     };
   }
 
@@ -192,13 +201,14 @@ export function assessUv(value: number | null): ComfortAssessment {
     metric: "uv",
     tone: "neutral",
     label: "Below strong UV threshold",
-    explanation: `UV index is below ${SWIM_RULES.uvWarningAt}.`,
+    explanation: `UV index is below ${rules.uvWarningAt}.`,
   };
 }
 
 export function assessDirectRadiation(
   value: number | null,
   validAt: string,
+  rules: Readonly<SwimRules> = SWIM_RULES,
 ): ComfortAssessment {
   if (value === null || !Number.isFinite(value)) {
     return unavailable("direct-radiation", "Direct-radiation");
@@ -210,15 +220,15 @@ export function assessDirectRadiation(
   }
 
   const isMidday =
-    localTime.hour >= SWIM_RULES.middayStartHour &&
-    localTime.hour <= SWIM_RULES.middayEndHour;
+    localTime.hour >= rules.middayStartHour &&
+    localTime.hour <= rules.middayEndHour;
 
-  if (isMidday && value >= SWIM_RULES.directRadiationWarningAtWm2) {
+  if (isMidday && value >= rules.directRadiationWarningAtWm2) {
     return {
       metric: "direct-radiation",
       tone: "warning",
       label: "Direct midday sun",
-      explanation: `At or above ${SWIM_RULES.directRadiationWarningAtWm2} W/m² during ${SWIM_RULES.middayStartHour}:00–${SWIM_RULES.middayEndHour}:00 ${BEACH.timezone}.`,
+      explanation: `At or above ${rules.directRadiationWarningAtWm2} W/m² during ${rules.middayStartHour}:00–${rules.middayEndHour}:00 ${BEACH.timezone}.`,
     };
   }
 
@@ -236,9 +246,10 @@ export function assessExposure(
   directRadiationWm2: number | null,
   cloudCoverPct: number | null,
   validAt: string,
+  rules: Readonly<SwimRules> = SWIM_RULES,
 ): ComfortAssessment {
-  const uv = assessUv(uvIndex);
-  const radiation = assessDirectRadiation(directRadiationWm2, validAt);
+  const uv = assessUv(uvIndex, rules);
+  const radiation = assessDirectRadiation(directRadiationWm2, validAt, rules);
 
   if (radiation.tone === "warning") {
     return { ...radiation, metric: "exposure" };
@@ -259,39 +270,39 @@ export function assessExposure(
   if (
     cloudCoverPct !== null &&
     Number.isFinite(cloudCoverPct) &&
-    cloudCoverPct >= SWIM_RULES.lowerExposureCloudCoverAtLeastPct
+    cloudCoverPct >= rules.lowerExposureCloudCoverAtLeastPct
   ) {
     return {
       metric: "exposure",
       tone: "neutral",
       label: "Overcast",
-      explanation: `Cloud cover is at or above ${SWIM_RULES.lowerExposureCloudCoverAtLeastPct}%.`,
+      explanation: `Cloud cover is at or above ${rules.lowerExposureCloudCoverAtLeastPct}%.`,
     };
   }
 
   if (
     uvIndex !== null &&
     Number.isFinite(uvIndex) &&
-    uvIndex <= SWIM_RULES.lowerExposureUvAtMost
+    uvIndex <= rules.lowerExposureUvAtMost
   ) {
     return {
       metric: "exposure",
       tone: "neutral",
       label: "Lower UV",
-      explanation: `UV index is at or below ${SWIM_RULES.lowerExposureUvAtMost}.`,
+      explanation: `UV index is at or below ${rules.lowerExposureUvAtMost}.`,
     };
   }
 
   if (
     directRadiationWm2 !== null &&
     Number.isFinite(directRadiationWm2) &&
-    directRadiationWm2 <= SWIM_RULES.lowerExposureRadiationAtMostWm2
+    directRadiationWm2 <= rules.lowerExposureRadiationAtMostWm2
   ) {
     return {
       metric: "exposure",
       tone: "neutral",
       label: "Lower direct sun",
-      explanation: `Direct radiation is at or below ${SWIM_RULES.lowerExposureRadiationAtMostWm2} W/m².`,
+      explanation: `Direct radiation is at or below ${rules.lowerExposureRadiationAtMostWm2} W/m².`,
     };
   }
 
@@ -314,14 +325,15 @@ export const TONE_PRIORITY: Record<ComfortTone, number> = {
 
 export function assessSwimConditions(
   input: SwimConditionInput,
+  rules: Readonly<SwimRules> = SWIM_RULES,
 ): SwimConditionAssessment {
   const assessments = [
-    assessWaveHeight(input.waveHeightM),
-    assessWavePeriod(input.wavePeriodS),
-    assessWaterTemperature(input.waterTemperatureC),
-    assessWind(input.windSpeedKmh, input.windGustKmh),
-    assessUv(input.uvIndex),
-    assessDirectRadiation(input.directRadiationWm2, input.validAt),
+    assessWaveHeight(input.waveHeightM, rules),
+    assessWavePeriod(input.wavePeriodS, rules),
+    assessWaterTemperature(input.waterTemperatureC, rules),
+    assessWind(input.windSpeedKmh, input.windGustKmh, rules),
+    assessUv(input.uvIndex, rules),
+    assessDirectRadiation(input.directRadiationWm2, input.validAt, rules),
   ];
   const highest = assessments.reduce((current, candidate) =>
     TONE_PRIORITY[candidate.tone] > TONE_PRIORITY[current.tone]
@@ -390,17 +402,19 @@ function flagsDetail(flags: ComfortAssessment[]): string {
 
 export function deriveSwimmingSummary(
   input: SwimmingSummaryInput,
+  rules: Readonly<SwimRules> = SWIM_RULES,
 ): SwimmingSummary {
   const cards: SwimmingCardAssessments = {
-    water: assessWaterTemperature(input.waterTemperatureC),
-    waves: assessWaveHeight(input.waveHeightM),
-    period: assessWavePeriod(input.wavePeriodS),
-    wind: assessWind(input.windSpeedKmh, input.windGustKmh),
+    water: assessWaterTemperature(input.waterTemperatureC, rules),
+    waves: assessWaveHeight(input.waveHeightM, rules),
+    period: assessWavePeriod(input.wavePeriodS, rules),
+    wind: assessWind(input.windSpeedKmh, input.windGustKmh, rules),
     exposure: assessExposure(
       input.uvIndex,
       input.directRadiationWm2,
       input.cloudCoverPct,
       input.validAt,
+      rules,
     ),
   };
   const assessments = [

@@ -1,5 +1,5 @@
 import { BEACH } from "@/config/location";
-import { SWIM_RULES } from "@/config/rules";
+import { SWIM_RULES, type SwimRules } from "@/config/rules";
 import {
   assessSwimConditions,
   type ComfortAssessment,
@@ -85,30 +85,32 @@ function exposureReasons(
     WeatherForecastHour,
     "uvIndex" | "directRadiationWm2" | "cloudCoverPct"
   >,
+  rules: Readonly<SwimRules>,
 ): string[] {
   const reasons: string[] = [];
 
-  if (
-    hour.uvIndex !== null &&
-    hour.uvIndex <= SWIM_RULES.lowerExposureUvAtMost
-  ) {
-    reasons.push(`UV ${hour.uvIndex.toFixed(1)} (≤3)`);
+  if (hour.uvIndex !== null && hour.uvIndex <= rules.lowerExposureUvAtMost) {
+    reasons.push(
+      `UV ${hour.uvIndex.toFixed(1)} (≤${rules.lowerExposureUvAtMost})`,
+    );
   }
 
   if (
     hour.directRadiationWm2 !== null &&
-    hour.directRadiationWm2 <= SWIM_RULES.lowerExposureRadiationAtMostWm2
+    hour.directRadiationWm2 <= rules.lowerExposureRadiationAtMostWm2
   ) {
     reasons.push(
-      `Direct radiation ${hour.directRadiationWm2.toFixed(0)} W/m² (≤200)`,
+      `Direct radiation ${hour.directRadiationWm2.toFixed(0)} W/m² (≤${rules.lowerExposureRadiationAtMostWm2})`,
     );
   }
 
   if (
     hour.cloudCoverPct !== null &&
-    hour.cloudCoverPct >= SWIM_RULES.lowerExposureCloudCoverAtLeastPct
+    hour.cloudCoverPct >= rules.lowerExposureCloudCoverAtLeastPct
   ) {
-    reasons.push(`Cloud cover ${hour.cloudCoverPct.toFixed(0)}% (≥70%)`);
+    reasons.push(
+      `Cloud cover ${hour.cloudCoverPct.toFixed(0)}% (≥${rules.lowerExposureCloudCoverAtLeastPct}%)`,
+    );
   }
 
   return reasons;
@@ -142,19 +144,23 @@ function evaluateHour(
   localDate: string,
   weather: WeatherForecastHour | undefined,
   marine: MarineForecastHour | undefined,
+  rules: Readonly<SwimRules>,
 ): LateDayHourEvaluation {
-  const assessment = assessSwimConditions({
-    waveHeightM: finiteOrNull(marine?.waveHeightM),
-    wavePeriodS: finiteOrNull(marine?.wavePeriodS),
-    waterTemperatureC: finiteOrNull(marine?.seaSurfaceTemperatureC),
-    windSpeedKmh: finiteOrNull(weather?.windSpeedKmh),
-    windGustKmh: finiteOrNull(weather?.windGustKmh),
-    uvIndex: finiteOrNull(weather?.uvIndex),
-    directRadiationWm2: finiteOrNull(weather?.directRadiationWm2),
-    validAt,
-  });
+  const assessment = assessSwimConditions(
+    {
+      waveHeightM: finiteOrNull(marine?.waveHeightM),
+      wavePeriodS: finiteOrNull(marine?.wavePeriodS),
+      waterTemperatureC: finiteOrNull(marine?.seaSurfaceTemperatureC),
+      windSpeedKmh: finiteOrNull(weather?.windSpeedKmh),
+      windGustKmh: finiteOrNull(weather?.windGustKmh),
+      uvIndex: finiteOrNull(weather?.uvIndex),
+      directRadiationWm2: finiteOrNull(weather?.directRadiationWm2),
+      validAt,
+    },
+    rules,
+  );
   const missing = missingInputs(weather, marine);
-  const lowerExposure = weather ? exposureReasons(weather) : [];
+  const lowerExposure = weather ? exposureReasons(weather, rules) : [];
   const dangerLabels = assessment.assessments
     .filter((item) => item.tone === "danger")
     .map((item) => item.label);
@@ -270,6 +276,7 @@ function qualifyingRuns(
 function windowForRun(
   run: LateDayHourEvaluation[],
   sunsetAt: string,
+  rules: Readonly<SwimRules>,
 ): SwimWindow | null {
   const first = run[0];
   const last = run.at(-1);
@@ -286,8 +293,7 @@ function windowForRun(
   if (
     startMilliseconds === null ||
     endMilliseconds === null ||
-    endMilliseconds - startMilliseconds <
-      SWIM_RULES.lateDayMinimumHours * HOUR_MS
+    endMilliseconds - startMilliseconds < rules.lateDayMinimumHours * HOUR_MS
   ) {
     return null;
   }
@@ -341,6 +347,7 @@ export function buildLateDayHours(
   weatherHours: readonly WeatherForecastHour[],
   marineHours: readonly MarineForecastHour[],
   sunsetAt: string | null,
+  rules: Readonly<SwimRules> = SWIM_RULES,
 ): LateDayHourEvaluation[] {
   if (!sunsetAt) {
     return [];
@@ -361,7 +368,7 @@ export function buildLateDayHours(
       const milliseconds = instantMilliseconds(validAt);
       return (
         localTime?.localDate === localDate &&
-        localTime.hour >= SWIM_RULES.lateDayStartHour &&
+        localTime.hour >= rules.lateDayStartHour &&
         milliseconds !== null &&
         milliseconds < sunsetMilliseconds
       );
@@ -374,6 +381,7 @@ export function buildLateDayHours(
       localDate,
       weatherByTime.get(validAt),
       marineByTime.get(validAt),
+      rules,
     ),
   );
 }
@@ -383,6 +391,7 @@ export function findBestLateDayWindow(
   weatherHours: readonly WeatherForecastHour[],
   marineHours: readonly MarineForecastHour[],
   solarDay: SolarDay | null,
+  rules: Readonly<SwimRules> = SWIM_RULES,
 ): SwimWindow | null {
   const sunsetAt = solarDay?.sunsetAt ?? null;
   if (!sunsetAt) {
@@ -394,9 +403,10 @@ export function findBestLateDayWindow(
     weatherHours,
     marineHours,
     sunsetAt,
+    rules,
   );
   const candidates = qualifyingRuns(hours)
-    .map((run) => windowForRun(run, sunsetAt))
+    .map((run) => windowForRun(run, sunsetAt, rules))
     .filter((window): window is SwimWindow => window !== null)
     .sort((left, right) => {
       const leftDuration = Date.parse(left.endAt) - Date.parse(left.startAt);
@@ -414,6 +424,7 @@ export function buildSwimmingForecast(
   weatherHours: readonly WeatherForecastHour[],
   marineHours: readonly MarineForecastHour[],
   solarDays: readonly SolarDay[],
+  rules: Readonly<SwimRules> = SWIM_RULES,
 ): SwimForecastDay[] {
   // Solar days are requested with timezone=GMT, so providerDate is a GMT
   // calendar day. In summer the Eastern sunset (~20:15 EDT) falls after
@@ -467,12 +478,14 @@ export function buildSwimmingForecast(
         weatherHours,
         marineHours,
         solarDay?.sunsetAt ?? null,
+        rules,
       );
       const bestWindow = findBestLateDayWindow(
         localDate,
         weatherHours,
         marineHours,
         solarDay,
+        rules,
       );
       const hasCompleteHour = lateDayHours.some((hour) => hour.complete);
       const state: SwimForecastDayState = bestWindow

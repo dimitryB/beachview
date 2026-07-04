@@ -293,8 +293,8 @@ a:hover {
 
 .primary-nav {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  max-width: 420px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  max-width: 620px;
   padding: 4px;
   margin: 24px 0 32px;
   background: rgb(13 29 42 / 86%);
@@ -1060,6 +1060,209 @@ a:hover {
 @media (forced-colors: active) {
   .readiness-card__symbol {
     forced-color-adjust: none;
+  }
+}
+
+/* Locally stored recommendation preferences. */
+.config-form {
+  padding: clamp(18px, 4vw, 32px);
+  background: rgb(13 29 42 / 88%);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+}
+
+.config-form__intro {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.config-form__intro h2 {
+  margin: 5px 0 0;
+  font-size: clamp(1.25rem, 3vw, 1.75rem);
+}
+
+.config-form__intro > p {
+  max-width: 480px;
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.8125rem;
+  line-height: 1.55;
+}
+
+.config-message {
+  padding: 14px 16px;
+  margin: 0 0 18px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+.config-message--error {
+  background: rgb(255 104 120 / 7%);
+  border-color: rgb(255 104 120 / 52%);
+}
+
+.config-message--success {
+  background: rgb(77 213 146 / 7%);
+  border-color: rgb(77 213 146 / 48%);
+}
+
+.config-message ul {
+  margin: 8px 0 0;
+  padding-left: 20px;
+}
+
+.config-groups {
+  display: grid;
+  gap: 16px;
+}
+
+.config-group {
+  min-width: 0;
+  padding: 20px;
+  margin: 0;
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+}
+
+.config-group legend {
+  padding: 0 8px;
+  color: var(--color-text);
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.config-group__description {
+  max-width: 760px;
+  margin: 0 0 18px;
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.config-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px 24px;
+}
+
+.config-field {
+  min-width: 0;
+}
+
+.config-field label {
+  display: block;
+  margin-bottom: 7px;
+  font-size: 0.8125rem;
+  font-weight: 750;
+}
+
+.config-field__control {
+  display: flex;
+  align-items: center;
+  min-height: 46px;
+  overflow: hidden;
+  background: rgb(7 19 31 / 54%);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+}
+
+.config-field__control:focus-within {
+  border-color: var(--color-accent);
+  outline: var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.config-field input {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 10px 12px;
+  color: var(--color-text);
+  background: transparent;
+  border: 0;
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+}
+
+.config-field input:focus-visible {
+  outline: 0;
+}
+
+.config-field__control span {
+  align-self: stretch;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 12px;
+  color: var(--color-text-muted);
+  background: rgb(19 40 56 / 72%);
+  border-left: 1px solid var(--color-border);
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.config-field > p {
+  margin: 7px 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.7rem;
+  line-height: 1.45;
+}
+
+.config-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding-top: 24px;
+}
+
+.config-button {
+  min-height: 44px;
+  padding: 10px 16px;
+  color: var(--color-text);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.8125rem;
+  font-weight: 800;
+}
+
+.config-button:hover {
+  border-color: var(--color-accent);
+}
+
+.config-button--primary {
+  color: var(--color-bg);
+  background: var(--color-accent-strong);
+  border-color: var(--color-accent-strong);
+}
+
+@media (max-width: 640px) {
+  .config-form__intro {
+    flex-direction: column;
+  }
+
+  .config-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 420px) {
+  .primary-nav a {
+    padding-inline: 8px;
+  }
+
+  .config-group {
+    padding: 16px 12px;
+  }
+
+  .config-actions {
+    display: grid;
   }
 }
 

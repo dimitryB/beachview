@@ -1,5 +1,10 @@
 import { BEACH } from "@/config/location";
-import { FISHING_RULES, SWIM_RULES, TIDE_RULES } from "@/config/rules";
+import {
+  FISHING_RULES,
+  SWIM_RULES,
+  TIDE_RULES,
+  type SwimRules,
+} from "@/config/rules";
 import {
   calculatePressureTendencyAt,
   type PressureTendency,
@@ -143,6 +148,7 @@ export function buildMovementWindows(
   events: readonly TideEvent[],
   weatherHours: readonly WeatherForecastHour[],
   alerts: readonly OfficialAlert[] = [],
+  swimRules: Readonly<SwimRules> = SWIM_RULES,
 ): FishingMovementWindow[] {
   return calculateTideRanges(events).flatMap((range) => {
     const fromTime = instantMilliseconds(range.fromEvent.validAt);
@@ -187,13 +193,11 @@ export function buildMovementWindows(
     // derived state, so an overlapping alert disqualifies the window.
     const overlappingAlert = findOverlappingAlert(start, end, alerts);
     const windBelowStrong =
-      windSpeedKmh !== null && windSpeedKmh < SWIM_RULES.windStrongAtKmh;
-    // The approved red strong-wind state is sustained >= 35 km/h OR gust
-    // >= 50 km/h, and a red or missing-data state outranks a favorable
-    // window (rule precedence), so candidacy also requires a known gust
-    // below the configured strong-gust threshold.
+      windSpeedKmh !== null && windSpeedKmh < swimRules.windStrongAtKmh;
+    // A configured red strong-wind or strong-gust state, as well as missing
+    // wind data, outranks a favorable window (rule precedence).
     const gustBelowStrong =
-      windGustKmh !== null && windGustKmh < SWIM_RULES.windGustStrongAtKmh;
+      windGustKmh !== null && windGustKmh < swimRules.windGustStrongAtKmh;
     const isCandidate =
       windBelowStrong && gustBelowStrong && overlappingAlert === null;
     const windExplanation =
@@ -273,6 +277,7 @@ export function buildFishingForecast(
   weatherHours: readonly WeatherForecastHour[],
   referenceInstant: string,
   alerts: readonly OfficialAlert[] = [],
+  swimRules: Readonly<SwimRules> = SWIM_RULES,
 ): FishingForecastDay[] {
   const startLocalDate = localDateForInstant(referenceInstant);
   if (!startLocalDate) {
@@ -280,7 +285,12 @@ export function buildFishingForecast(
   }
 
   const ranges = calculateTideRanges(events);
-  const movements = buildMovementWindows(events, weatherHours, alerts);
+  const movements = buildMovementWindows(
+    events,
+    weatherHours,
+    alerts,
+    swimRules,
+  );
   const shifts = findMeaningfulWindShifts(weatherHours);
   const dates = new Set<string>();
 

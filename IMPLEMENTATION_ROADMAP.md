@@ -386,6 +386,40 @@ criteria remain open until the repository owner follows
 [DEPLOYMENT.md](DEPLOYMENT.md), publishes the site, and records the production
 checks.
 
+## Phase 8 — Local recommendation configuration
+
+**Status: Complete — July 4, 2026**
+
+### Step 36: Add the Config view
+
+- [x] Add a bookmarkable Config navigation tab.
+- [x] Expose water, wave, wind, exposure, and late-day window thresholds.
+- [x] Keep the documented approved values as factory defaults.
+- [x] Explain comparison boundaries and metric units beside each input.
+
+### Step 37: Persist and apply preferences
+
+- [x] Validate finite ranges and related threshold ordering.
+- [x] Store one versioned complete preference set in browser `localStorage`.
+- [x] Fall back safely for missing, blocked, corrupt, or incompatible storage.
+- [x] Apply active values to current swimming flags, late-day swim windows, and
+      fishing strong-wind candidate gates.
+- [x] Let the user remove custom values and restore defaults.
+
+### Step 38: Verify configuration behavior
+
+- [x] Test validation, storage failure, corruption, persistence, and reset.
+- [x] Test custom rule boundaries in the pure domain modules.
+- [x] Add browser coverage for save, reload, recommendation changes, 320 px
+      reflow, and automated WCAG A/AA checks.
+
+### Phase 8 exit criteria
+
+- Valid custom thresholds immediately drive derived recommendations after save.
+- A reload in the same browser retains the complete preference set.
+- Invalid storage never displays as active or changes the documented defaults.
+- Configuration does not weaken official guidance or safety precedence.
+
 ## 3. Suggested milestone grouping
 
 | Milestone              | Phases | Demonstrable outcome                                        |
@@ -394,6 +428,7 @@ checks.
 | M2: Usable dashboard   | 3      | Responsive live current conditions in both tabs             |
 | M3: Complete MVP       | 4–5    | Tide chart, ten-day views, safety/provenance, accessibility |
 | M4: Production release | 6–7    | Resilient, optimized, deployed static application           |
+| M5: Local preferences  | 8      | Validated browser-local recommendation configuration        |
 
 ## 4. Definition of done
 

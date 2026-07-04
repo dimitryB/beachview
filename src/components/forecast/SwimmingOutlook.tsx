@@ -7,6 +7,7 @@ import {
   buildSwimmingForecast,
   type SwimForecastDay,
 } from "@/domain/forecast-blocks";
+import { SWIM_RULES, type SwimRules } from "@/config/rules";
 import { localDateForInstant } from "@/domain/time";
 import { useCurrentTime } from "@/hooks/use-current-time";
 import type {
@@ -200,6 +201,7 @@ interface SwimmingOutlookProps {
   marine: ProviderState<MarineDataset>;
   onRetryMarine: () => void;
   onRetryWeather: () => void;
+  rules?: Readonly<SwimRules>;
   weather: ProviderState<WeatherDataset>;
 }
 
@@ -207,6 +209,7 @@ export function SwimmingOutlook({
   marine,
   onRetryMarine,
   onRetryWeather,
+  rules = SWIM_RULES,
   weather,
 }: SwimmingOutlookProps) {
   const currentTime = useCurrentTime();
@@ -219,9 +222,10 @@ export function SwimmingOutlook({
             weatherDataset.hourly,
             marineDataset.hourly,
             weatherDataset.solarDays,
+            rules,
           )
         : [],
-    [marineDataset, weatherDataset],
+    [marineDataset, rules, weatherDataset],
   );
   const todayLocalDate =
     currentTime === null

@@ -12,4 +12,9 @@ describe("routes", () => {
     expect(readView("?view=fishing")).toBe("fishing");
     expect(viewHref("fishing")).toBe("?view=fishing");
   });
+
+  it("reads and writes the Config view", () => {
+    expect(readView("?view=config")).toBe("config");
+    expect(viewHref("config")).toBe("?view=config");
+  });
 });

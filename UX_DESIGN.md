@@ -21,7 +21,8 @@ App shell
 ├── Official alert region
 ├── Primary navigation
 │   ├── Swimming
-│   └── Fishing
+│   ├── Fishing
+│   └── Config
 ├── Selected view
 │   ├── Current conditions
 │   ├── Decision details
@@ -30,7 +31,7 @@ App shell
 └── Sources, limitations, and attribution
 ```
 
-The alert region is outside the tabs so an official hazard remains visible in either mode.
+The alert region is outside the tabs so official guidance remains visible in every view.
 
 ## 3. Mobile layout
 
@@ -41,7 +42,7 @@ The alert region is outside the tabs so an official hazard remains visible in ei
 ├────────────────────────────────┤
 │ OFFICIAL ALERT, when present   │
 ├────────────────────────────────┤
-│ [ Swimming ]       [ Fishing ] │
+│ [ Swimming ] [ Fishing ][Config]│
 ├────────────────────────────────┤
 │ NOW                            │
 │  25.6°C water      33°C air    │
@@ -77,7 +78,7 @@ Use a centered `12`-column grid with a maximum content width around `1200 px`.
 ┌───────────────────────────────────────────────────────────┐
 │ Header                                      Freshness · ↻ │
 │ Alert region                                             │
-│ Swimming | Fishing                                      │
+│ Swimming | Fishing | Config                             │
 ├─────────────────────────────┬─────────────────────────────┤
 │ Current conditions          │ Next matching window        │
 │ Metric card grid            │ Rule explanations           │
@@ -293,6 +294,18 @@ the NOAA Sandbridge station and MLLW datum, provider links, attribution, and the
 distinction between predictions and VABeachCast estimates. Native `details` and
 `summary` elements preserve keyboard and screen-reader behavior without custom
 disclosure scripting.
+
+### 6.10 Recommendation configuration
+
+The Config view groups numeric controls into water/waves, wind, sun/time, and
+lower-exposure sections. Every control has a persistent label, metric unit,
+boundary explanation, and native number validation. Save applies the complete
+validated set; Restore defaults removes the local preference entry. A visible
+status identifies whether defaults or user values are active and whether the
+browser accepted the write.
+
+The view states that preferences stay on the current browser/device and do not
+change provider values, official guidance, or safety precedence.
 
 ## 7. Content rules
 

@@ -10,6 +10,7 @@ import {
   deriveSwimmingSummary,
   type SwimmingSummaryInput,
 } from "@/domain/comfort";
+import { SWIM_RULES } from "@/config/rules";
 
 function summaryInput(
   overrides: Partial<SwimmingSummaryInput> = {},
@@ -42,6 +43,19 @@ describe("swimming comfort rules", () => {
       tone: "danger",
       label: "Choppy",
     });
+  });
+
+  it("uses a supplied preference set without changing factory defaults", () => {
+    const customRules = {
+      ...SWIM_RULES,
+      waveHeightRedAboveM: 0.5,
+      wavePeriodRedBelowS: 9,
+    };
+
+    expect(assessWaveHeight(0.6, customRules).tone).toBe("danger");
+    expect(assessWavePeriod(8, customRules).tone).toBe("danger");
+    expect(assessWaveHeight(0.6).tone).toBe("neutral");
+    expect(assessWavePeriod(8).tone).toBe("neutral");
   });
 
   it("preserves exact cold and warm water boundaries", () => {

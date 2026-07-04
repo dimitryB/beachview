@@ -14,6 +14,7 @@ import {
   formatNumber,
 } from "@/components/format";
 import { TideChart } from "@/components/tide/TideChart";
+import { SWIM_RULES, type SwimRules } from "@/config/rules";
 import { calculatePressureTendency } from "@/domain/pressure";
 import { deriveTideState } from "@/domain/tide";
 import { degreesToCardinal } from "@/domain/wind";
@@ -29,6 +30,7 @@ interface FishingPageProps {
   data: BeachDataState;
   onRetryTides: () => void;
   onRetryWeather: () => void;
+  rules?: Readonly<SwimRules>;
 }
 
 const MODELED_ASSESSMENT: ConditionAssessment = {
@@ -47,6 +49,7 @@ export function FishingPage({
   data,
   onRetryTides,
   onRetryWeather,
+  rules = SWIM_RULES,
 }: FishingPageProps) {
   const currentTime = useCurrentTime();
   const weatherData = data.weather.data;
@@ -210,6 +213,7 @@ export function FishingPage({
         <FishingOutlook
           onRetryTides={onRetryTides}
           onRetryWeather={onRetryWeather}
+          rules={rules}
           tides={data.tides}
           weather={data.weather}
         />

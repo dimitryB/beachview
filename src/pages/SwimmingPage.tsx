@@ -9,6 +9,7 @@ import { ProviderNotice } from "@/components/conditions/ProviderNotice";
 import { DeferredOutlook } from "@/components/forecast/DeferredOutlook";
 import { formatEasternValidTime, formatNumber } from "@/components/format";
 import { TideChart } from "@/components/tide/TideChart";
+import { SWIM_RULES, type SwimRules } from "@/config/rules";
 import { deriveSwimmingSummary } from "@/domain/comfort";
 import { findClosestWeatherHour } from "@/domain/weather";
 import { degreesToCardinal } from "@/domain/wind";
@@ -24,6 +25,7 @@ interface SwimmingPageProps {
   onRetryMarine: () => void;
   onRetryTides: () => void;
   onRetryWeather: () => void;
+  rules?: Readonly<SwimRules>;
 }
 
 const MODELED_ASSESSMENT: ConditionAssessment = {
@@ -46,6 +48,7 @@ export function SwimmingPage({
   onRetryMarine,
   onRetryTides,
   onRetryWeather,
+  rules = SWIM_RULES,
 }: SwimmingPageProps) {
   const weatherData = data.weather.data;
   const marineData = data.marine.data;
@@ -58,21 +61,24 @@ export function SwimmingPage({
           weatherData.hourly,
         )
       : null;
-  const { cards, readiness } = deriveSwimmingSummary({
-    waveHeightM: marine?.waveHeightM.value ?? null,
-    wavePeriodS: marine?.wavePeriodS.value ?? null,
-    waterTemperatureC: marine?.seaSurfaceTemperatureC.value ?? null,
-    windSpeedKmh: weather?.windSpeedKmh.value ?? null,
-    windGustKmh: weather?.windGustKmh.value ?? null,
-    uvIndex: exposureHour?.uvIndex ?? null,
-    directRadiationWm2: exposureHour?.directRadiationWm2 ?? null,
-    cloudCoverPct:
-      exposureHour?.cloudCoverPct ?? weather?.cloudCoverPct.value ?? null,
-    validAt: exposureHour?.validAt ?? weather?.airTemperatureC.validAt ?? "",
-    hasCoreData: Boolean(weatherData && marineData),
-    hasStaleData:
-      data.weather.status === "stale" || data.marine.status === "stale",
-  });
+  const { cards, readiness } = deriveSwimmingSummary(
+    {
+      waveHeightM: marine?.waveHeightM.value ?? null,
+      wavePeriodS: marine?.wavePeriodS.value ?? null,
+      waterTemperatureC: marine?.seaSurfaceTemperatureC.value ?? null,
+      windSpeedKmh: weather?.windSpeedKmh.value ?? null,
+      windGustKmh: weather?.windGustKmh.value ?? null,
+      uvIndex: exposureHour?.uvIndex ?? null,
+      directRadiationWm2: exposureHour?.directRadiationWm2 ?? null,
+      cloudCoverPct:
+        exposureHour?.cloudCoverPct ?? weather?.cloudCoverPct.value ?? null,
+      validAt: exposureHour?.validAt ?? weather?.airTemperatureC.validAt ?? "",
+      hasCoreData: Boolean(weatherData && marineData),
+      hasStaleData:
+        data.weather.status === "stale" || data.marine.status === "stale",
+    },
+    rules,
+  );
   const direction = weather?.windDirectionDeg.value ?? null;
   const cardinal = direction === null ? null : degreesToCardinal(direction);
   const windSupporting =
@@ -227,6 +233,7 @@ export function SwimmingPage({
           marine={data.marine}
           onRetryMarine={onRetryMarine}
           onRetryWeather={onRetryWeather}
+          rules={rules}
           weather={data.weather}
         />
       </Suspense>

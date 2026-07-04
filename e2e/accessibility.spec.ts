@@ -60,6 +60,17 @@ test("Fishing has no automated WCAG A/AA violations", async ({ page }) => {
   await expectNoAccessibilityViolations(page);
 });
 
+test("Config has no automated WCAG A/AA violations", async ({ page }) => {
+  await page.goto("/?view=config");
+  await expect(
+    page.getByRole("heading", {
+      name: "Tune your comfort recommendations.",
+    }),
+  ).toBeVisible();
+
+  await expectNoAccessibilityViolations(page);
+});
+
 test("a partial provider failure has no automated WCAG A/AA violations", async ({
   page,
 }) => {
@@ -82,7 +93,7 @@ test("keyboard users can skip to content and change activity views", async ({
 
   await page.keyboard.press("Tab");
   await expect(
-    page.getByRole("link", { name: "Skip to conditions" }),
+    page.getByRole("link", { name: "Skip to main content" }),
   ).toBeFocused();
   await page.keyboard.press("Enter");
   await expect(page.getByRole("main")).toBeFocused();

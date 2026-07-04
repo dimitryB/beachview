@@ -27,6 +27,7 @@ Unit-test pure domain behavior:
 - Cosine tide interpolation at start, midpoint, and end
 - Local-day grouping across midnight and daylight-saving transitions
 - Late-day window qualification and tie-breaking
+- Custom-rule boundaries and cross-field configuration validation
 - Fishing movement midpoint calculations
 - Missing, `null`, `NaN`, and malformed inputs
 
@@ -60,6 +61,8 @@ Verify:
 - Structurally incomplete or timestamp-invalid cache entries are discarded before rendering.
 - Alert banners precede comfort content.
 - Tabs expose selected/current state.
+- Config inputs retain labels/units, reject inconsistent values, persist after
+  reload, survive corrupt storage, and restore defaults.
 - Tide summaries and event tables contain chart-equivalent information.
 - Retry actions call only the affected provider when appropriate.
 - Offline state explains that saved values may be shown.
@@ -78,13 +81,15 @@ Critical Playwright flows:
 8. Manual refresh updates timestamps.
 9. Mobile forecast cards can be reached by touch-equivalent and keyboard interaction.
 10. Official alert remains visible in both tabs.
-11. Automated axe scans report no WCAG A/AA violations on both tabs and a partial-provider failure.
+11. Automated axe scans report no WCAG A/AA violations on every view and a partial-provider failure.
 12. Content reflows at a `320 px` CSS viewport and loading animation stops under reduced-motion preference.
 13. A slow provider does not block successful current-condition sections.
 14. Current conditions render while a deferred ten-day presentation chunk is pending.
 15. Offline and failed refreshes retain cached values with stale language.
 16. Malformed provider data remains isolated from valid feeds.
 17. Manual refresh replaces values and advances the provider cache timestamp.
+18. Config changes alter derived Swimming/Fishing results and persist after a
+    reload without changing provider responses.
 
 Mock provider responses for deterministic CI. Keep one optional live smoke test separate from required CI.
 
@@ -125,7 +130,7 @@ Use a small tolerance and review intended changes rather than automatically acce
 
 Automated:
 
-- axe checks on both tabs and important states
+- axe checks on every view and important states
 - ESLint accessibility rules
 - Color-contrast checks for tokens and status pairs
 

@@ -10,6 +10,7 @@ interface PrimaryNavigationProps {
 const ITEMS: ReadonlyArray<{ label: string; view: AppView }> = [
   { label: "Swimming", view: "swimming" },
   { label: "Fishing", view: "fishing" },
+  { label: "Config", view: "config" },
 ];
 
 export function PrimaryNavigation({
@@ -32,7 +33,7 @@ export function PrimaryNavigation({
   };
 
   return (
-    <nav className="primary-nav" aria-label="Beach activity">
+    <nav className="primary-nav" aria-label="Primary">
       {ITEMS.map(({ label, view }) => (
         <a
           aria-current={currentView === view ? "page" : undefined}

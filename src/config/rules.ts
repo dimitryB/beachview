@@ -1,4 +1,24 @@
-export const SWIM_RULES = Object.freeze({
+export interface SwimRules {
+  waveHeightRedAboveM: number;
+  wavePeriodRedBelowS: number;
+  waterColdBelowC: number;
+  waterWarmAboveC: number;
+  windWarningAtKmh: number;
+  windGustWarningAtKmh: number;
+  windStrongAtKmh: number;
+  windGustStrongAtKmh: number;
+  uvWarningAt: number;
+  directRadiationWarningAtWm2: number;
+  middayStartHour: number;
+  middayEndHour: number;
+  lateDayStartHour: number;
+  lateDayMinimumHours: number;
+  lowerExposureUvAtMost: number;
+  lowerExposureRadiationAtMostWm2: number;
+  lowerExposureCloudCoverAtLeastPct: number;
+}
+
+export const SWIM_RULES: Readonly<SwimRules> = Object.freeze({
   waveHeightRedAboveM: 1,
   wavePeriodRedBelowS: 7,
   waterColdBelowC: 20,

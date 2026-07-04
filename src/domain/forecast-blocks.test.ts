@@ -2,6 +2,7 @@ import {
   buildSwimmingForecast,
   findBestLateDayWindow,
 } from "@/domain/forecast-blocks";
+import { SWIM_RULES } from "@/config/rules";
 import type {
   MarineForecastHour,
   SolarDay,
@@ -203,6 +204,29 @@ describe("late-day swimming forecast", () => {
     );
 
     expect(window?.startAt).toBe("2026-07-02T19:00:00.000Z");
+  });
+
+  it("uses configured wave and start-time preferences for matches", () => {
+    const times = [
+      "2026-07-02T19:00:00.000Z",
+      "2026-07-02T20:00:00.000Z",
+      "2026-07-02T21:00:00.000Z",
+    ];
+    const weather = times.map((time) => weatherHour(time));
+    const marine = times.map((time) => marineHour(time));
+
+    expect(
+      findBestLateDayWindow(localDate, weather, marine, sunset, {
+        ...SWIM_RULES,
+        waveHeightRedAboveM: 0.4,
+      }),
+    ).toBeNull();
+    expect(
+      findBestLateDayWindow(localDate, weather, marine, sunset, {
+        ...SWIM_RULES,
+        lateDayStartHour: 16,
+      })?.startAt,
+    ).toBe("2026-07-02T20:00:00.000Z");
   });
 
   it("generates ten stable local-day view models", () => {

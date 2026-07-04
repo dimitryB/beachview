@@ -11,7 +11,7 @@ The application is intended to be a lightweight static web app that can run on a
 
 ## Project status
 
-Phases 0 through 7 are implemented as a release candidate. The application now has a responsive dark shell; strict normalized weather, marine, and tide data; resilient provider caching; tested derived behavior; semantic Swimming and Fishing outlooks; an estimated NOAA-bounded tide chart; prominent official safety links; complete source/grid/station provenance; and automated WCAG A/AA checks. Independent provider requests start concurrently, the ten-day outlooks load after current conditions, repeated in-flight refreshes are coalesced, and production builds enforce the documented bundle budgets. Provider failures remain isolated with stale, offline, unavailable, and scoped retry states. GitHub Pages deployment, dependency updates, and monthly live-provider checks are configured. Structured NWS alert fetching remains the explicitly deferred first follow-up; publication plus manual screen-reader and `200%` browser-zoom confirmation require the repository owner.
+Phases 0 through 8 are implemented as a release candidate. The application now has a responsive dark shell; strict normalized weather, marine, and tide data; resilient provider caching; tested derived behavior; semantic Swimming and Fishing outlooks; locally stored user-adjustable comfort thresholds; an estimated NOAA-bounded tide chart; prominent official safety links; complete source/grid/station provenance; and automated WCAG A/AA checks. Independent provider requests start concurrently, the ten-day outlooks load after current conditions, repeated in-flight refreshes are coalesced, and production builds enforce the documented bundle budgets. Provider failures remain isolated with stale, offline, unavailable, and scoped retry states. GitHub Pages deployment, dependency updates, and monthly live-provider checks are configured. Structured NWS alert fetching remains the explicitly deferred first follow-up; publication plus manual screen-reader and `200%` browser-zoom confirmation require the repository owner.
 
 ## Fixed operating scope
 
@@ -23,6 +23,7 @@ Phases 0 through 7 are implemented as a release candidate. The application now h
 | Display timezone  | `America/New_York`                                              |
 | Units             | Celsius, meters, km/h, seconds, hPa, degrees/cardinal direction |
 | Default view      | Swimming                                                        |
+| Utility view      | Config, with browser-local recommendation preferences           |
 | Theme             | Dark only                                                       |
 | Forecast horizon  | 10 days where source coverage permits                           |
 
