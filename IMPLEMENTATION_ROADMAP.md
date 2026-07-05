@@ -388,12 +388,13 @@ checks.
 
 ## Phase 8 — Local recommendation configuration
 
-**Status: Complete — July 4, 2026**
+**Status: Complete — July 5, 2026**
 
 ### Step 36: Add the Config view
 
 - [x] Add a bookmarkable Config navigation tab.
 - [x] Expose water, wave, wind, exposure, and late-day window thresholds.
+- [x] Expose a separate wave-height gate for short-period choppy flags.
 - [x] Keep the documented approved values as factory defaults.
 - [x] Explain comparison boundaries and metric units beside each input.
 
@@ -410,6 +411,7 @@ checks.
 
 - [x] Test validation, storage failure, corruption, persistence, and reset.
 - [x] Test custom rule boundaries in the pure domain modules.
+- [x] Test the combined period/height choppy boundary and forecast effect.
 - [x] Add browser coverage for save, reload, recommendation changes, 320 px
       reflow, and automated WCAG A/AA checks.
 

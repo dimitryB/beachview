@@ -38,11 +38,20 @@ describe("swimming comfort rules", () => {
       tone: "danger",
       label: "High waves",
     });
-    expect(assessWavePeriod(7).tone).toBe("neutral");
-    expect(assessWavePeriod(6.999)).toMatchObject({
+    expect(assessWavePeriod(7, 0.401).tone).toBe("neutral");
+    expect(assessWavePeriod(6.999, 0.4)).toMatchObject({
+      tone: "neutral",
+      label: "Small short-period waves",
+    });
+    expect(assessWavePeriod(6.999, 0.401)).toMatchObject({
       tone: "danger",
       label: "Choppy",
     });
+  });
+
+  it("requires wave height when a short period needs the choppy gate", () => {
+    expect(assessWavePeriod(6, null).tone).toBe("unavailable");
+    expect(assessWavePeriod(7, null).tone).toBe("neutral");
   });
 
   it("uses a supplied preference set without changing factory defaults", () => {
@@ -50,12 +59,14 @@ describe("swimming comfort rules", () => {
       ...SWIM_RULES,
       waveHeightRedAboveM: 0.5,
       wavePeriodRedBelowS: 9,
+      choppyWaveHeightAboveM: 0.7,
     };
 
     expect(assessWaveHeight(0.6, customRules).tone).toBe("danger");
-    expect(assessWavePeriod(8, customRules).tone).toBe("danger");
+    expect(assessWavePeriod(8, 0.7, customRules).tone).toBe("neutral");
+    expect(assessWavePeriod(8, 0.701, customRules).tone).toBe("danger");
     expect(assessWaveHeight(0.6).tone).toBe("neutral");
-    expect(assessWavePeriod(8).tone).toBe("neutral");
+    expect(assessWavePeriod(8, 0.6).tone).toBe("neutral");
   });
 
   it("preserves exact cold and warm water boundaries", () => {

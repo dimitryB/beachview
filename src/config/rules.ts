@@ -1,6 +1,7 @@
 export interface SwimRules {
   waveHeightRedAboveM: number;
   wavePeriodRedBelowS: number;
+  choppyWaveHeightAboveM: number;
   waterColdBelowC: number;
   waterWarmAboveC: number;
   windWarningAtKmh: number;
@@ -21,6 +22,7 @@ export interface SwimRules {
 export const SWIM_RULES: Readonly<SwimRules> = Object.freeze({
   waveHeightRedAboveM: 1,
   wavePeriodRedBelowS: 7,
+  choppyWaveHeightAboveM: 0.4,
   waterColdBelowC: 20,
   waterWarmAboveC: 24,
   windWarningAtKmh: 20,

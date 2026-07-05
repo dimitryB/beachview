@@ -131,7 +131,7 @@ Show:
 Apply the rule definitions in [Data Sources and Decision Rules](DATA_AND_RULES.md). At minimum:
 
 - Wave height above the configured threshold is red; the default is `1.0 m`.
-- Wave period below the configured threshold is red and described as choppy; the default is `7 s`.
+- Wave period below the configured threshold is red and described as choppy only when wave height is above the configured choppy-height gate; the defaults are `7 s` and `0.4 m`.
 - Water below the configured threshold receives a cold warning; the default is `20°C`.
 - Water above the configured threshold receives a warm-water alert; the default is `24°C`.
 - Wind receives a sand/discomfort warning at the approved configured threshold.

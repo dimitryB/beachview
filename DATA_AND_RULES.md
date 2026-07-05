@@ -27,7 +27,7 @@ Stored values must be finite, inside the input-specific bounds, and satisfy thes
 - Midday start is not later than midday end.
 - Time-window hours and minimum duration are whole numbers.
 
-Missing, corrupt, incompatible, or invalid storage uses the factory defaults. Restoring defaults removes the stored preference entry.
+Missing, corrupt, incompatible, or invalid storage uses the factory defaults. Restoring defaults removes the stored preference entry. Version 1 preference entries are migrated by adding the default choppy-height gate while preserving their other valid values.
 
 ## 2. Source catalog
 
@@ -238,14 +238,14 @@ Rules are evaluated per forecast hour. Each metric returns a semantic state and 
 
 ### 10.1 Default requirement thresholds
 
-| Metric            | Rule     | State            |
-| ----------------- | -------- | ---------------- |
-| Wave height       | `>1.0 m` | Red: high waves  |
-| Wave period       | `<7 s`   | Red: choppy      |
-| Water temperature | `<20°C`  | Cold warning     |
-| Water temperature | `>24°C`  | Warm-water alert |
+| Metric               | Rule                | State            |
+| -------------------- | ------------------- | ---------------- |
+| Wave height          | `>1.0 m`            | Red: high waves  |
+| Wave period + height | `<7 s` and `>0.4 m` | Red: choppy      |
+| Water temperature    | `<20°C`             | Cold warning     |
+| Water temperature    | `>24°C`             | Warm-water alert |
 
-At exactly `1.0 m`, wave height does not trigger the red rule. At exactly `7 s`, period does not trigger the red rule. Boundary tests must preserve those semantics.
+At exactly `1.0 m`, wave height does not trigger the high-wave rule. At exactly `7 s`, period does not trigger the choppy rule. A short period at exactly `0.4 m` also does not trigger the choppy rule; the height must be strictly above the configured gate. When period is short but wave height is unavailable, the choppy assessment is unavailable rather than favorable. Boundary tests must preserve these semantics.
 
 ### 10.2 Default wind thresholds
 

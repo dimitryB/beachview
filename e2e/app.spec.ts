@@ -88,6 +88,9 @@ test("saves recommendation config and reapplies it after reload", async ({
     name: "High-wave threshold",
   });
   await waveInput.fill("0.4");
+  await page
+    .getByRole("spinbutton", { name: "Choppy minimum wave height" })
+    .fill("0.5");
   await page.getByRole("button", { name: "Save preferences" }).click();
   await expect(page.getByText("Using your values")).toBeVisible();
 
@@ -98,6 +101,12 @@ test("saves recommendation config and reapplies it after reload", async ({
       .locator(".condition-state--danger")
       .getByText("High waves"),
   ).toBeVisible();
+  await expect(
+    page
+      .getByRole("region", { name: "Current modeled conditions" })
+      .locator(".condition-state--neutral")
+      .getByText("Small short-period waves"),
+  ).toBeVisible();
 
   await page.reload();
   await expect(
@@ -105,6 +114,12 @@ test("saves recommendation config and reapplies it after reload", async ({
       .getByRole("region", { name: "Current modeled conditions" })
       .locator(".condition-state--danger")
       .getByText("High waves"),
+  ).toBeVisible();
+  await expect(
+    page
+      .getByRole("region", { name: "Current modeled conditions" })
+      .locator(".condition-state--neutral")
+      .getByText("Small short-period waves"),
   ).toBeVisible();
 });
 

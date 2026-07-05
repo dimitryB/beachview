@@ -48,7 +48,7 @@ The alert region is outside the tabs so official guidance remains visible in eve
 │  25.6°C water      33°C air    │
 │  Warm-water alert              │
 ├───────────────┬────────────────┤
-│ Waves 0.4 m   │ Period 5.7 s   │
+│ Waves 0.5 m   │ Period 5.7 s   │
 │ Comfortable   │ Choppy         │
 ├───────────────┴────────────────┤
 │ Wind 17 km/h SSE · Gust 21     │
@@ -213,7 +213,7 @@ Example:
 ```text
 WAVE PERIOD
 5.7 s
-⚠ Choppy · below 7 s
+⚠ Choppy · below 7 s with waves above 0.4 m
 ```
 
 ### 6.5 Matching-window card

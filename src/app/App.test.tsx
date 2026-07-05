@@ -147,6 +147,9 @@ describe("App", () => {
     expect(
       screen.getByRole("spinbutton", { name: "High-wave threshold" }),
     ).toHaveValue(0.8);
+    expect(
+      screen.getByRole("spinbutton", { name: "Choppy minimum wave height" }),
+    ).toHaveValue(0.4);
     expect(screen.getByText("Using your values")).toBeVisible();
   });
 

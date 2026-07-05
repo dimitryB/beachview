@@ -44,7 +44,14 @@ const GROUPS: readonly ConfigGroup[] = [
         label: "Choppy-period threshold",
         unit: "s",
         step: 0.5,
-        help: "Wave periods below this value are flagged as choppy.",
+        help: "Periods below this value can be flagged as choppy.",
+      },
+      {
+        key: "choppyWaveHeightAboveM",
+        label: "Choppy minimum wave height",
+        unit: "m",
+        step: 0.1,
+        help: "A short period is choppy only when waves are above this height.",
       },
       {
         key: "waterColdBelowC",

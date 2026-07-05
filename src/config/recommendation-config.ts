@@ -3,11 +3,13 @@ import { SWIM_RULES, type SwimRules } from "@/config/rules";
 export const RECOMMENDATION_CONFIG_STORAGE_KEY =
   "vabeachcast:recommendation-config";
 
-const SCHEMA_VERSION = 1;
+const SCHEMA_VERSION = 2;
+const LEGACY_SCHEMA_VERSION = 1;
 
 export const SWIM_RULE_LIMITS = Object.freeze({
   waveHeightRedAboveM: { min: 0.1, max: 5 },
   wavePeriodRedBelowS: { min: 1, max: 30 },
+  choppyWaveHeightAboveM: { min: 0, max: 5 },
   waterColdBelowC: { min: 0, max: 35 },
   waterWarmAboveC: { min: 1, max: 40 },
   windWarningAtKmh: { min: 1, max: 100 },
@@ -38,6 +40,7 @@ function copyRules(source: Readonly<SwimRules>): SwimRules {
   return {
     waveHeightRedAboveM: source.waveHeightRedAboveM,
     wavePeriodRedBelowS: source.wavePeriodRedBelowS,
+    choppyWaveHeightAboveM: source.choppyWaveHeightAboveM,
     waterColdBelowC: source.waterColdBelowC,
     waterWarmAboveC: source.waterWarmAboveC,
     windWarningAtKmh: source.windWarningAtKmh,
@@ -148,7 +151,23 @@ export function loadRecommendationConfig(
     }
 
     const envelope: unknown = JSON.parse(stored);
-    if (!isRecord(envelope) || envelope.schemaVersion !== SCHEMA_VERSION) {
+    if (!isRecord(envelope)) {
+      return defaultRecommendationConfig();
+    }
+
+    if (
+      envelope.schemaVersion === LEGACY_SCHEMA_VERSION &&
+      isRecord(envelope.rules)
+    ) {
+      return (
+        rulesFromUnknown({
+          ...envelope.rules,
+          choppyWaveHeightAboveM: SWIM_RULES.choppyWaveHeightAboveM,
+        }) ?? defaultRecommendationConfig()
+      );
+    }
+
+    if (envelope.schemaVersion !== SCHEMA_VERSION) {
       return defaultRecommendationConfig();
     }
 

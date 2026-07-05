@@ -113,7 +113,9 @@ test("offline refresh retains cached values and marks them stale", async ({
 
   await expect(page.getByText("You’re offline.")).toBeVisible();
   await expect(page.getByText("Showing cached weather data")).toBeVisible();
-  await expect(page.getByText("Showing cached marine data")).toBeVisible();
+  await expect(
+    page.getByText("Showing cached marine data", { exact: true }),
+  ).toBeVisible();
   await expect(page.getByText("31.8", { exact: true })).toBeVisible();
   await expect(page.getByText("25.7", { exact: true })).toBeVisible();
 });

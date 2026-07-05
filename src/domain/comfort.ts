@@ -75,26 +75,40 @@ export function assessWaveHeight(
 
 export function assessWavePeriod(
   value: number | null,
+  waveHeightM: number | null,
   rules: Readonly<SwimRules> = SWIM_RULES,
 ): ComfortAssessment {
   if (value === null || !Number.isFinite(value)) {
     return unavailable("wave-period", "Wave-period");
   }
 
-  if (value < rules.wavePeriodRedBelowS) {
+  if (value >= rules.wavePeriodRedBelowS) {
+    return {
+      metric: "wave-period",
+      tone: "neutral",
+      label: "Longer-period waves",
+      explanation: `At or above ${rules.wavePeriodRedBelowS} s.`,
+    };
+  }
+
+  if (waveHeightM === null || !Number.isFinite(waveHeightM)) {
+    return unavailable("wave-period", "Wave-height context for wave-period");
+  }
+
+  if (waveHeightM > rules.choppyWaveHeightAboveM) {
     return {
       metric: "wave-period",
       tone: "danger",
       label: "Choppy",
-      explanation: `Below the configured ${rules.wavePeriodRedBelowS} s period threshold.`,
+      explanation: `Period is below ${rules.wavePeriodRedBelowS} s while wave height is above ${rules.choppyWaveHeightAboveM.toFixed(1)} m.`,
     };
   }
 
   return {
     metric: "wave-period",
     tone: "neutral",
-    label: "Longer-period waves",
-    explanation: `At or above ${rules.wavePeriodRedBelowS} s.`,
+    label: "Small short-period waves",
+    explanation: `Period is below ${rules.wavePeriodRedBelowS} s, but wave height is at or below ${rules.choppyWaveHeightAboveM.toFixed(1)} m.`,
   };
 }
 
@@ -329,7 +343,7 @@ export function assessSwimConditions(
 ): SwimConditionAssessment {
   const assessments = [
     assessWaveHeight(input.waveHeightM, rules),
-    assessWavePeriod(input.wavePeriodS, rules),
+    assessWavePeriod(input.wavePeriodS, input.waveHeightM, rules),
     assessWaterTemperature(input.waterTemperatureC, rules),
     assessWind(input.windSpeedKmh, input.windGustKmh, rules),
     assessUv(input.uvIndex, rules),
@@ -407,7 +421,7 @@ export function deriveSwimmingSummary(
   const cards: SwimmingCardAssessments = {
     water: assessWaterTemperature(input.waterTemperatureC, rules),
     waves: assessWaveHeight(input.waveHeightM, rules),
-    period: assessWavePeriod(input.wavePeriodS, rules),
+    period: assessWavePeriod(input.wavePeriodS, input.waveHeightM, rules),
     wind: assessWind(input.windSpeedKmh, input.windGustKmh, rules),
     exposure: assessExposure(
       input.uvIndex,

@@ -23,6 +23,7 @@ describe("fixed project configuration", () => {
     expect(SWIM_RULES).toEqual({
       waveHeightRedAboveM: 1,
       wavePeriodRedBelowS: 7,
+      choppyWaveHeightAboveM: 0.4,
       waterColdBelowC: 20,
       waterWarmAboveC: 24,
       windWarningAtKmh: 20,

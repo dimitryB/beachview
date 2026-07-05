@@ -121,6 +121,16 @@ describe("late-day swimming forecast", () => {
       findBestLateDayWindow(
         localDate,
         times.map((time) => weatherHour(time)),
+        times.map((time) =>
+          marineHour(time, { waveHeightM: 0.4, wavePeriodS: 6.9 }),
+        ),
+        sunset,
+      ),
+    ).not.toBeNull();
+    expect(
+      findBestLateDayWindow(
+        localDate,
+        times.map((time) => weatherHour(time)),
         times.map((time, index) =>
           marineHour(time, {
             wavePeriodS: index === 0 ? Number.NaN : 8,

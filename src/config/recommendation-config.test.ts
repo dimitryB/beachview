@@ -30,6 +30,27 @@ describe("recommendation config storage", () => {
     expect(saveRecommendationConfig(rules, storage)).toBe(true);
     expect(loadRecommendationConfig(storage)).toEqual(rules);
     expect(storage.values.has(RECOMMENDATION_CONFIG_STORAGE_KEY)).toBe(true);
+    expect(
+      JSON.parse(storage.values.get(RECOMMENDATION_CONFIG_STORAGE_KEY) ?? "{}")
+        .schemaVersion,
+    ).toBe(2);
+  });
+
+  it("migrates version 1 preferences with the default choppy height gate", () => {
+    const storage = memoryStorage();
+    const legacyRules: Record<string, number> = { ...SWIM_RULES };
+    delete legacyRules.choppyWaveHeightAboveM;
+    legacyRules.waveHeightRedAboveM = 0.8;
+    storage.setItem(
+      RECOMMENDATION_CONFIG_STORAGE_KEY,
+      JSON.stringify({ schemaVersion: 1, rules: legacyRules }),
+    );
+
+    expect(loadRecommendationConfig(storage)).toEqual({
+      ...SWIM_RULES,
+      waveHeightRedAboveM: 0.8,
+      choppyWaveHeightAboveM: 0.4,
+    });
   });
 
   it("falls back to fresh defaults for corrupt, incompatible, or invalid data", () => {

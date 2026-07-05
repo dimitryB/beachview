@@ -242,6 +242,9 @@ to the factory rules for tests and non-UI callers. `App` owns the active rule
 set, loads it through `src/config/recommendation-config.ts`, and passes it to
 both activity views. Invalid or unavailable `localStorage` never enters domain
 logic.
+Preference schema upgrades may migrate older complete rule sets by supplying a
+new field's documented factory default; other invalid or unknown versions fall
+back to all defaults.
 
 Each independent section uses:
 

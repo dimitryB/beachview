@@ -21,7 +21,7 @@ Unit-test pure domain behavior:
 
 - Wind-degree normalization and all 16 cardinal boundaries
 - Pressure tendency boundaries
-- Wave, period, temperature, wind, and exposure rules
+- Wave, period-plus-height choppiness, temperature, wind, and exposure rules
 - Circular wind-direction differences across north, such as `350° → 10°`
 - Tide phase before, near, and after each event
 - Cosine tide interpolation at start, midpoint, and end
@@ -31,7 +31,7 @@ Unit-test pure domain behavior:
 - Fishing movement midpoint calculations
 - Missing, `null`, `NaN`, and malformed inputs
 
-Every comparison boundary requires a test on both sides and at equality.
+Every comparison boundary requires a test on both sides and at equality. Choppiness tests must cover the period and wave-height thresholds together, including a short period at, below, and above the configured height gate.
 
 ### 2.2 Provider adapter tests
 
@@ -63,6 +63,7 @@ Verify:
 - Tabs expose selected/current state.
 - Config inputs retain labels/units, reject inconsistent values, persist after
   reload, survive corrupt storage, and restore defaults.
+- Short-period presentation becomes choppy only above the configured wave-height gate.
 - Tide summaries and event tables contain chart-equivalent information.
 - Retry actions call only the affected provider when appropriate.
 - Offline state explains that saved values may be shown.
