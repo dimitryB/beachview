@@ -16,6 +16,7 @@ describe("fixed project configuration", () => {
       noaaTideStation: "8639428",
       noaaTideDatum: "MLLW",
       forecastDays: 10,
+      shoreFacingDeg: 90,
     });
   });
 
@@ -60,6 +61,17 @@ describe("fixed project configuration", () => {
     expect(FISHING_RULES).toEqual({
       movementHalfWindowMinutes: 60,
       weatherMatchToleranceMinutes: 90,
+      marineMatchToleranceMinutes: 90,
+      movementModerateAtMPerH: 0.18,
+      movementStrongAtMPerH: 0.28,
+      twilightHalfWindowMinutes: 60,
+      solunarMajorHalfWindowMinutes: 60,
+      solunarMinorHalfWindowMinutes: 30,
+      moonHorizonAltitudeDeg: 0.125,
+      focusExtraContextSignals: 1,
+      focusCandidateLimit: 4,
+      onshoreAtMostDeg: 45,
+      offshoreAtLeastDeg: 135,
     });
   });
 });

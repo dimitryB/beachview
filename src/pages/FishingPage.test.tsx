@@ -66,6 +66,7 @@ describe("FishingPage", () => {
     const { container } = render(
       <FishingPage
         data={data}
+        onRetryMarine={vi.fn()}
         onRetryTides={vi.fn()}
         onRetryWeather={vi.fn()}
       />,
@@ -89,6 +90,7 @@ describe("FishingPage", () => {
     render(
       <FishingPage
         data={data}
+        onRetryMarine={vi.fn()}
         onRetryTides={vi.fn()}
         onRetryWeather={vi.fn()}
       />,
@@ -109,6 +111,7 @@ describe("FishingPage", () => {
     render(
       <FishingPage
         data={data}
+        onRetryMarine={vi.fn()}
         onRetryTides={vi.fn()}
         onRetryWeather={vi.fn()}
       />,
@@ -125,7 +128,9 @@ describe("FishingPage", () => {
     ).toBeInTheDocument();
     expect(screen.getAllByText(/Stronger estimated/).length).toBeGreaterThan(0);
     // The 7:03 PM UTC movement midpoint sits within tolerance of the injected
-    // 7 PM weather hour, whose calm modeled wind makes it a candidate.
-    expect(screen.getByText(/Candidate period/)).toBeInTheDocument();
+    // 7 PM weather hour, whose calm modeled wind makes it a focused candidate
+    // when the movement/context rule also matches.
+    expect(screen.getByText("Candidate focus")).toBeInTheDocument();
+    expect(screen.getAllByText(/Focused candidate/).length).toBeGreaterThan(0);
   });
 });

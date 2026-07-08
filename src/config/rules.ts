@@ -60,4 +60,33 @@ export const TIDE_RULES = Object.freeze({
 export const FISHING_RULES = Object.freeze({
   movementHalfWindowMinutes: 60,
   weatherMatchToleranceMinutes: 90,
+  marineMatchToleranceMinutes: 90,
+  // Estimated peak tide-height change (m/h) at the midpoint of the cosine
+  // curve: rate = π × range / (2 × duration). Sandbridge mean ranges near
+  // 1 m over ~6.2 h sit around 0.25 m/h; springs exceed 0.3, neaps fall
+  // below 0.18.
+  movementModerateAtMPerH: 0.18,
+  movementStrongAtMPerH: 0.28,
+  // A movement window overlapping sunrise/sunset ± this half-window is
+  // flagged as a dawn/dusk (twilight) overlap.
+  twilightHalfWindowMinutes: 60,
+  // Conventional solunar spans: ~2 h centered on lunar transit (major) and
+  // ~1 h centered on moonrise/moonset (minor).
+  solunarMajorHalfWindowMinutes: 60,
+  solunarMinorHalfWindowMinutes: 30,
+  // Effective moonrise/set altitude: mean lunar parallax raises the
+  // geometric centre (+0.7275 × 0.9508°) while refraction lowers the
+  // horizon (−0.567°).
+  moonHorizonAltitudeDeg: 0.125,
+  // Candidate-focus presentation stays separate from the candidate gate: a
+  // focused candidate still has to pass the existing wind/alert gate, then it
+  // needs moderate-or-strong movement plus either strong movement or at least
+  // this many timing/context signals.
+  focusExtraContextSignals: 1,
+  focusCandidateLimit: 4,
+  // Wind-from direction relative to the shore-facing bearing: within
+  // onshoreAtMostDeg is onshore, beyond offshoreAtLeastDeg is offshore,
+  // anything between is alongshore.
+  onshoreAtMostDeg: 45,
+  offshoreAtLeastDeg: 135,
 });

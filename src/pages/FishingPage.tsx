@@ -28,6 +28,7 @@ const FishingOutlook = lazy(async () => {
 
 interface FishingPageProps {
   data: BeachDataState;
+  onRetryMarine: () => void;
   onRetryTides: () => void;
   onRetryWeather: () => void;
   rules?: Readonly<SwimRules>;
@@ -47,6 +48,7 @@ function modeledMeta(validAt: string | undefined): string | undefined {
 
 export function FishingPage({
   data,
+  onRetryMarine,
   onRetryTides,
   onRetryWeather,
   rules = SWIM_RULES,
@@ -156,6 +158,7 @@ export function FishingPage({
           <div className="data-status-row">
             <DataStatus label="Weather" state={data.weather} />
             <DataStatus label="NOAA" state={data.tides} />
+            <DataStatus label="Marine" state={data.marine} />
           </div>
         </div>
         <div className="provider-notice-stack">
@@ -168,6 +171,11 @@ export function FishingPage({
             label="NOAA tide"
             onRetry={onRetryTides}
             state={data.tides}
+          />
+          <ProviderNotice
+            label="marine"
+            onRetry={onRetryMarine}
+            state={data.marine}
           />
         </div>
         <div className="condition-grid condition-grid--fishing">
@@ -211,6 +219,7 @@ export function FishingPage({
       <TideChart onRetry={onRetryTides} tides={data.tides} />
       <Suspense fallback={<DeferredOutlook activity="fishing" />}>
         <FishingOutlook
+          marine={data.marine}
           onRetryTides={onRetryTides}
           onRetryWeather={onRetryWeather}
           rules={rules}

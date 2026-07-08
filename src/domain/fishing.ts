@@ -10,24 +10,57 @@ import {
   type PressureTendency,
 } from "@/domain/pressure";
 import {
+  calculateMoonPhase,
+  calculateSolunarPeriods,
+  type MoonPhase,
+  type SolunarPeriod,
+  type SolunarPeriodKind,
+} from "@/domain/moon";
+import {
+  HOUR_MS,
   MINUTE_MS,
   instantMilliseconds,
   localDateForInstant,
 } from "@/domain/time";
-import { findClosestWeatherHour } from "@/domain/weather";
+import { findClosestHour, findClosestWeatherHour } from "@/domain/weather";
 import {
+  circularDirectionDifference,
   degreesToCardinal,
   findMeaningfulWindShifts,
   type CardinalDirection,
   type WindShift,
 } from "@/domain/wind";
 import type {
+  MarineForecastHour,
   OfficialAlert,
+  SolarDay,
   TideEvent,
   WeatherForecastHour,
 } from "@/types/domain";
 
 export type EstimatedTideDirection = "incoming" | "outgoing";
+
+export type MovementStrength = "weak" | "moderate" | "strong";
+
+export type ShoreWindClass = "onshore" | "offshore" | "alongshore";
+
+export type TwilightOverlap = "dawn" | "dusk";
+
+export type CandidateFocusLevel = "strong" | "context";
+
+export interface CandidateFocus {
+  level: CandidateFocusLevel;
+  label: "Focused candidate";
+  reasons: string[];
+}
+
+// Optional informational inputs. Missing context leaves the matching window
+// fields null without changing candidacy (DATA_AND_RULES §13.4).
+export interface FishingContext {
+  solarDays?: readonly SolarDay[];
+  marineHours?: readonly MarineForecastHour[];
+  solunarPeriods?: readonly SolunarPeriod[];
+}
 
 export interface TideRange {
   fromEvent: TideEvent;
@@ -49,8 +82,15 @@ export interface FishingMovementWindow {
   windGustKmh: number | null;
   windDirectionDeg: number | null;
   windDirection: CardinalDirection | null;
+  shoreWind: ShoreWindClass | null;
+  waveHeightM: number | null;
+  peakRateMPerH: number;
+  strength: MovementStrength;
+  twilightOverlap: TwilightOverlap | null;
+  solunarOverlap: SolunarPeriodKind | null;
   pressureTendency: PressureTendency;
   isCandidate: boolean;
+  focus: CandidateFocus | null;
   label: "Stronger estimated tidal movement";
   explanation: string;
 }
@@ -80,6 +120,7 @@ export interface FishingForecastDay {
   events: TideEvent[];
   tideRanges: TideRange[];
   maximumTideRangeM: number | null;
+  moonPhase: MoonPhase | null;
   movementWindows: FishingMovementWindow[];
   windShifts: WindShift[];
   timeline: FishingTimelineEntry[];
@@ -144,11 +185,192 @@ function findOverlappingAlert(
   );
 }
 
+// Peak rate of the cosine tide-height curve between adjacent extrema:
+// h(t) follows (1 - cos(πx)) / 2, whose derivative peaks at the midpoint
+// with value π × range / (2 × duration).
+export function estimatePeakRateMPerH(
+  rangeM: number,
+  durationMs: number,
+): number {
+  if (!Number.isFinite(rangeM) || durationMs <= 0) {
+    return 0;
+  }
+  return (Math.PI * rangeM) / (2 * (durationMs / HOUR_MS));
+}
+
+export function classifyMovementStrength(
+  peakRateMPerH: number,
+): MovementStrength {
+  if (peakRateMPerH >= FISHING_RULES.movementStrongAtMPerH) {
+    return "strong";
+  }
+  return peakRateMPerH >= FISHING_RULES.movementModerateAtMPerH
+    ? "moderate"
+    : "weak";
+}
+
+export function classifyShoreWind(
+  windFromDeg: number,
+  shoreFacingDeg: number = BEACH.shoreFacingDeg,
+): ShoreWindClass | null {
+  const difference = circularDirectionDifference(windFromDeg, shoreFacingDeg);
+  if (difference === null) {
+    return null;
+  }
+  if (difference <= FISHING_RULES.onshoreAtMostDeg) {
+    return "onshore";
+  }
+  return difference >= FISHING_RULES.offshoreAtLeastDeg
+    ? "offshore"
+    : "alongshore";
+}
+
+function overlaps(
+  startMs: number,
+  endMs: number,
+  otherStartMs: number | null,
+  otherEndMs: number | null,
+): boolean {
+  return (
+    otherStartMs !== null &&
+    otherEndMs !== null &&
+    otherStartMs < endMs &&
+    otherEndMs > startMs
+  );
+}
+
+export function findTwilightOverlap(
+  startMs: number,
+  endMs: number,
+  solarDays: readonly SolarDay[],
+): TwilightOverlap | null {
+  const halfWindowMs = FISHING_RULES.twilightHalfWindowMinutes * MINUTE_MS;
+  for (const day of solarDays) {
+    for (const [boundary, overlap] of [
+      [day.sunriseAt, "dawn"],
+      [day.sunsetAt, "dusk"],
+    ] as const) {
+      if (boundary === null) {
+        continue;
+      }
+      const boundaryMs = instantMilliseconds(boundary);
+      if (
+        boundaryMs !== null &&
+        overlaps(
+          startMs,
+          endMs,
+          boundaryMs - halfWindowMs,
+          boundaryMs + halfWindowMs,
+        )
+      ) {
+        return overlap;
+      }
+    }
+  }
+  return null;
+}
+
+export function findSolunarOverlap(
+  startMs: number,
+  endMs: number,
+  periods: readonly SolunarPeriod[],
+): SolunarPeriodKind | null {
+  let minorOverlap = false;
+  for (const period of periods) {
+    if (
+      overlaps(
+        startMs,
+        endMs,
+        instantMilliseconds(period.startAt),
+        instantMilliseconds(period.endAt),
+      )
+    ) {
+      if (period.kind === "major") {
+        return "major";
+      }
+      minorOverlap = true;
+    }
+  }
+  return minorOverlap ? "minor" : null;
+}
+
+function candidateFocusForWindow({
+  isCandidate,
+  shoreWind,
+  solunarOverlap,
+  strength,
+  swimRules,
+  twilightOverlap,
+  windGustKmh,
+  windSpeedKmh,
+}: {
+  isCandidate: boolean;
+  shoreWind: ShoreWindClass | null;
+  solunarOverlap: SolunarPeriodKind | null;
+  strength: MovementStrength;
+  swimRules: Readonly<SwimRules>;
+  twilightOverlap: TwilightOverlap | null;
+  windGustKmh: number | null;
+  windSpeedKmh: number | null;
+}): CandidateFocus | null {
+  if (!isCandidate || strength === "weak") {
+    return null;
+  }
+
+  const windBelowWarning =
+    windSpeedKmh !== null &&
+    windGustKmh !== null &&
+    windSpeedKmh < swimRules.windWarningAtKmh &&
+    windGustKmh < swimRules.windGustWarningAtKmh;
+  if (!windBelowWarning) {
+    return null;
+  }
+
+  const reasons: string[] = [
+    `${strength} estimated tide movement`,
+    "wind below warning thresholds",
+  ];
+  let contextSignals = 0;
+
+  if (solunarOverlap === "major") {
+    reasons.push("major solunar overlap");
+    contextSignals += 1;
+  } else if (solunarOverlap === "minor") {
+    reasons.push("minor solunar overlap");
+  }
+
+  if (twilightOverlap !== null) {
+    reasons.push(`${twilightOverlap} twilight overlap`);
+    contextSignals += 1;
+  }
+
+  if (shoreWind === "offshore" || shoreWind === "alongshore") {
+    reasons.push(`${shoreWind} wind`);
+  }
+
+  if (strength === "strong") {
+    return {
+      level: "strong",
+      label: "Focused candidate",
+      reasons,
+    };
+  }
+
+  return contextSignals >= FISHING_RULES.focusExtraContextSignals
+    ? {
+        level: "context",
+        label: "Focused candidate",
+        reasons,
+      }
+    : null;
+}
+
 export function buildMovementWindows(
   events: readonly TideEvent[],
   weatherHours: readonly WeatherForecastHour[],
   alerts: readonly OfficialAlert[] = [],
   swimRules: Readonly<SwimRules> = SWIM_RULES,
+  context: Readonly<FishingContext> = {},
 ): FishingMovementWindow[] {
   return calculateTideRanges(events).flatMap((range) => {
     const fromTime = instantMilliseconds(range.fromEvent.validAt);
@@ -182,6 +404,27 @@ export function buildMovementWindows(
     const windDirectionDeg = weather?.windDirectionDeg ?? null;
     const windDirection =
       windDirectionDeg === null ? null : degreesToCardinal(windDirectionDeg);
+    const shoreWind =
+      windDirectionDeg === null ? null : classifyShoreWind(windDirectionDeg);
+    const marineHour = context.marineHours
+      ? findClosestHour(
+          midpointAt,
+          context.marineHours,
+          FISHING_RULES.marineMatchToleranceMinutes,
+        )
+      : null;
+    const waveHeightM = marineHour?.waveHeightM ?? null;
+    const peakRateMPerH = estimatePeakRateMPerH(
+      range.rangeM,
+      toTime - fromTime,
+    );
+    const strength = classifyMovementStrength(peakRateMPerH);
+    const twilightOverlap = context.solarDays
+      ? findTwilightOverlap(start, end, context.solarDays)
+      : null;
+    const solunarOverlap = context.solunarPeriods
+      ? findSolunarOverlap(start, end, context.solunarPeriods)
+      : null;
     const pressureTendency = weather
       ? calculatePressureTendencyAt(
           weather.validAt,
@@ -200,6 +443,16 @@ export function buildMovementWindows(
       windGustKmh !== null && windGustKmh < swimRules.windGustStrongAtKmh;
     const isCandidate =
       windBelowStrong && gustBelowStrong && overlappingAlert === null;
+    const focus = candidateFocusForWindow({
+      isCandidate,
+      shoreWind,
+      solunarOverlap,
+      strength,
+      swimRules,
+      twilightOverlap,
+      windGustKmh,
+      windSpeedKmh,
+    });
     const windExplanation =
       windSpeedKmh === null
         ? "Modeled wind is unavailable near the midpoint."
@@ -230,8 +483,15 @@ export function buildMovementWindows(
         windGustKmh,
         windDirectionDeg,
         windDirection,
+        shoreWind,
+        waveHeightM,
+        peakRateMPerH,
+        strength,
+        twilightOverlap,
+        solunarOverlap,
         pressureTendency,
         isCandidate,
+        focus,
         label: "Stronger estimated tidal movement" as const,
         explanation: `Estimated ${range.direction} movement is strongest near the midpoint between NOAA predicted extrema. ${windExplanation}${gustExplanation}${alertExplanation}`,
       },
@@ -278,18 +538,33 @@ export function buildFishingForecast(
   referenceInstant: string,
   alerts: readonly OfficialAlert[] = [],
   swimRules: Readonly<SwimRules> = SWIM_RULES,
+  context: Readonly<FishingContext> = {},
 ): FishingForecastDay[] {
   const startLocalDate = localDateForInstant(referenceInstant);
   if (!startLocalDate) {
     return [];
   }
 
+  const referenceMs = instantMilliseconds(referenceInstant);
+  const solunarPeriods =
+    context.solunarPeriods ??
+    (referenceMs === null
+      ? []
+      : calculateSolunarPeriods(
+          new Date(referenceMs - 12 * HOUR_MS).toISOString(),
+          new Date(
+            referenceMs + (BEACH.forecastDays + 1) * 24 * HOUR_MS,
+          ).toISOString(),
+          BEACH.latitude,
+          BEACH.longitude,
+        ));
   const ranges = calculateTideRanges(events);
   const movements = buildMovementWindows(
     events,
     weatherHours,
     alerts,
     swimRules,
+    { ...context, solunarPeriods },
   );
   const shifts = findMeaningfulWindShifts(weatherHours);
   const dates = new Set<string>();
@@ -340,6 +615,10 @@ export function buildFishingForecast(
           dailyRanges.length > 0
             ? Math.max(...dailyRanges.map((range) => range.rangeM))
             : null,
+        // The phase changes about 12° per day, so evaluating at a fixed
+        // UTC noon of the Eastern calendar date is precise enough for a
+        // daily label.
+        moonPhase: calculateMoonPhase(`${localDate}T12:00:00.000Z`),
         movementWindows: dailyMovements,
         windShifts: dailyShifts,
         timeline: timelineEntries(dailyEvents, dailyMovements, dailyShifts),

@@ -5,8 +5,11 @@ import type {
   CurrentWeather,
   DataPoint,
   DataSource,
+  MarineDataset,
+  MarineForecastHour,
   OfficialAlert,
   ProviderState,
+  SolarDay,
   TideDataset,
   TideEvent,
   TideEventType,
@@ -57,7 +60,10 @@ function weatherHour(
   };
 }
 
-function weatherDataset(hourly: WeatherForecastHour[]): WeatherDataset {
+function weatherDataset(
+  hourly: WeatherForecastHour[],
+  solarDays: SolarDay[] = [],
+): WeatherDataset {
   return {
     source: "open-meteo-weather",
     fetchedAt: FETCHED_AT,
@@ -69,9 +75,45 @@ function weatherDataset(hourly: WeatherForecastHour[]): WeatherDataset {
     },
     current: currentWeather(),
     hourly,
-    solarDays: [],
+    solarDays,
   };
 }
+
+function marineHour(
+  validAt: string,
+  overrides: Partial<MarineForecastHour> = {},
+): MarineForecastHour {
+  return {
+    validAt,
+    waveHeightM: 0.6,
+    wavePeriodS: 8,
+    seaSurfaceTemperatureC: 24,
+    ...overrides,
+  };
+}
+
+function marineDataset(hourly: MarineForecastHour[]): MarineDataset {
+  const source: DataSource = "open-meteo-marine";
+  return {
+    source: "open-meteo-marine",
+    fetchedAt: FETCHED_AT,
+    grid: {
+      requestedLatitude: 36.6917,
+      requestedLongitude: -75.92,
+      returnedLatitude: 36.6917,
+      returnedLongitude: -75.92,
+    },
+    current: {
+      waveHeightM: point(0.6, source),
+      wavePeriodS: point(8, source),
+      seaSurfaceTemperatureC: point(24, source),
+    },
+    hourly,
+  };
+}
+
+// The candidate movement window's midpoint is 2:00 PM UTC.
+const fixtureMarineHours = [marineHour("2026-07-02T14:00:00.000Z")];
 
 function tideEvent(
   type: TideEventType,
@@ -163,6 +205,7 @@ const fixtureAlert: OfficialAlert = {
 
 interface RenderOptions {
   alerts?: readonly OfficialAlert[];
+  marine?: ProviderState<MarineDataset>;
   onRetryTides?: () => void;
   onRetryWeather?: () => void;
 }
@@ -172,6 +215,7 @@ function renderOutlook(
   weather: ProviderState<WeatherDataset>,
   {
     alerts = [fixtureAlert],
+    marine,
     onRetryTides = vi.fn(),
     onRetryWeather = vi.fn(),
   }: RenderOptions = {},
@@ -179,6 +223,7 @@ function renderOutlook(
   return render(
     <FishingOutlook
       alerts={alerts}
+      marine={marine}
       onRetryTides={onRetryTides}
       onRetryWeather={onRetryWeather}
       tides={tides}
@@ -257,7 +302,7 @@ describe("FishingOutlook", () => {
       within(entry).getByText("9:00 AM – 11:00 AM Eastern"),
     ).toBeInTheDocument();
     expect(
-      within(entry).getByText("Wind 12 km/h from SW · gust 18 km/h"),
+      within(entry).getByText("Wind 12 km/h from SW (offshore) · gust 18 km/h"),
     ).toBeInTheDocument();
     expect(
       within(entry).getByText("Pressure: Rising +2.0 hPa / 3 h"),
@@ -265,6 +310,48 @@ describe("FishingOutlook", () => {
     expect(
       within(entry).getByText("Predicted tide range 0.92 m"),
     ).toBeInTheDocument();
+    // 0.92 m over 6 h peaks near 0.24 m/h: a moderate grade.
+    expect(
+      within(entry).getByText(
+        "Estimated peak tide change 0.24 m/h · moderate movement",
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it("surfaces focused candidates above the full timeline", () => {
+    renderOutlook(
+      providerState(tideDataset(fixtureEvents)),
+      providerState(
+        weatherDataset(fixtureWeatherHours, [
+          {
+            providerDate: "2026-07-02",
+            sunriseAt: null,
+            // The incoming movement window spans 13:00–15:00Z, so this
+            // synthetic sunset gives the moderate candidate extra timing context.
+            sunsetAt: "2026-07-02T14:00:00.000Z",
+          },
+        ]),
+      ),
+    );
+
+    expect(screen.getByText("Candidate focus")).toBeInTheDocument();
+    expect(screen.getByText("Stronger, cleaner signals")).toBeInTheDocument();
+    expect(screen.getByText("Today · incoming")).toBeInTheDocument();
+    expect(screen.getAllByText("dusk twilight overlap").length).toBeGreaterThan(
+      0,
+    );
+    expect(screen.getByText(/Focused candidates still pass/)).toBeVisible();
+    expect(screen.getByText(/full timeline remains below/i)).toBeVisible();
+
+    const timelineEntry = screen
+      .getAllByText(/Focused candidate/)
+      .map((element) => element.closest("li"))
+      .find((element) => element?.classList.contains("fishing-entry"));
+    if (!timelineEntry) {
+      throw new Error("No focused timeline entry found");
+    }
+    expect(timelineEntry).toHaveClass("fishing-entry--focused");
+    expect(dayGroup("Today")).toBeInTheDocument();
   });
 
   it("renders an alert-overlapping period as informational, not a candidate", () => {
@@ -317,12 +404,17 @@ describe("FishingOutlook", () => {
     const { container } = renderFixtureOutlook();
     const text = (container.textContent ?? "").toLowerCase();
 
+    // "wave" is allowed since wave-height context is explicitly modeled and
+    // informational; prohibited wording is any safety, observation,
+    // ranking, or swim-comfort claim.
     for (const banned of [
       "safe",
       "observed",
+      "measured",
       "guarantee",
       "fish score",
-      "wave",
+      "best time",
+      "optimal",
       "swim",
     ]) {
       expect(text).not.toContain(banned);
@@ -395,6 +487,49 @@ describe("FishingOutlook", () => {
     expect(
       within(entry).getByText("Pressure: Rising +2.0 hPa / 3 h"),
     ).toBeInTheDocument();
+  });
+
+  it("attaches modeled wave height when marine data is available", () => {
+    renderFixtureOutlook({
+      marine: providerState(marineDataset(fixtureMarineHours)),
+    });
+
+    const entry = screen.getByText(/Candidate period/).closest("li");
+    if (!entry) {
+      throw new Error("No candidate timeline entry found");
+    }
+    expect(
+      within(entry).getByText("Modeled wave height 0.6 m"),
+    ).toBeInTheDocument();
+    // The Marine feed's freshness chip joins NOAA and Weather.
+    expect(screen.getByText("Marine")).toBeInTheDocument();
+  });
+
+  it("omits wave lines without a marine freshness chip regression", () => {
+    renderFixtureOutlook();
+
+    expect(screen.queryByText(/Modeled wave height/)).toBeNull();
+    expect(screen.queryByText("Marine")).toBeNull();
+  });
+
+  it("names stale marine data with its age without demoting candidates", () => {
+    renderFixtureOutlook({
+      marine: providerState(marineDataset(fixtureMarineHours), {
+        status: "stale",
+        // 48 minutes before the fake system time of 4:00 PM UTC.
+        fetchedAt: "2026-07-02T15:12:00.000Z",
+      }),
+    });
+
+    expect(
+      screen.getByText(/Showing marine data updated 48 min ago/),
+    ).toBeVisible();
+    expect(
+      screen.getByText(/stale marine data and may be outdated/),
+    ).toBeVisible();
+    // Candidacy never depends on marine data, so the candidate stays.
+    expect(screen.getByText(/Candidate period/)).toBeVisible();
+    expect(screen.queryByText(/Based on stale data/)).toBeNull();
   });
 
   it("demotes candidates and names the feed when tide data is stale", () => {

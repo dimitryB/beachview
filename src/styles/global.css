@@ -1638,6 +1638,95 @@ a:hover {
   list-style: none;
 }
 
+.fishing-focus {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 16px;
+  padding: 14px;
+  border: 1px solid rgb(73 198 213 / 42%);
+  border-radius: var(--radius-card);
+  background: rgb(73 198 213 / 6%);
+}
+
+.fishing-focus__heading {
+  display: flex;
+  gap: 12px;
+  align-items: start;
+  justify-content: space-between;
+}
+
+.fishing-focus__heading h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.fishing-focus__count {
+  flex: 0 0 auto;
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.fishing-focus__note,
+.fishing-focus__detail {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+
+.fishing-focus__list {
+  display: grid;
+  gap: 10px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.fishing-focus__item {
+  display: grid;
+  min-width: 0;
+  gap: 6px;
+  padding: 12px;
+  border: 1px solid rgb(73 198 213 / 30%);
+  border-radius: 12px;
+  background: rgb(7 19 31 / 40%);
+}
+
+.fishing-focus__item--strong {
+  border-color: rgb(77 213 146 / 45%);
+  background: rgb(77 213 146 / 8%);
+}
+
+.fishing-focus__title,
+.fishing-focus__window {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.fishing-focus__reasons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.fishing-focus__reasons li {
+  padding: 4px 8px;
+  color: var(--color-text);
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1.2;
+  background: rgb(73 198 213 / 14%);
+  border: 1px solid rgb(73 198 213 / 24%);
+  border-radius: 999px;
+}
+
 .fishing-day {
   display: flex;
   flex-direction: column;
@@ -1655,6 +1744,13 @@ a:hover {
 }
 
 .fishing-day__range {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.fishing-day__moon {
   margin: 0;
   color: var(--color-text-muted);
   font-size: 0.75rem;
@@ -1707,6 +1803,13 @@ a:hover {
 .fishing-entry--candidate .fishing-entry__body {
   border-color: rgb(77 213 146 / 55%);
   box-shadow: inset 0 0 0 1px rgb(77 213 146 / 30%);
+}
+
+.fishing-entry--focused .fishing-entry__body {
+  border-color: rgb(73 198 213 / 70%);
+  box-shadow:
+    inset 0 0 0 1px rgb(73 198 213 / 35%),
+    0 0 0 1px rgb(77 213 146 / 20%);
 }
 
 .fishing-entry__title {
@@ -1815,6 +1918,10 @@ a:hover {
 }
 
 @media (min-width: 1024px) {
+  .fishing-focus__list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .fishing-outlook__days {
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     align-items: start;

@@ -111,6 +111,7 @@ export function App() {
           ) : view === "fishing" ? (
             <FishingPage
               data={beachData}
+              onRetryMarine={() => void beachData.refreshMarine()}
               onRetryTides={() => void beachData.refreshTides()}
               onRetryWeather={() => void beachData.refreshWeather()}
               rules={recommendationRules}

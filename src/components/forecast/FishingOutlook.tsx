@@ -9,11 +9,12 @@ import {
   type FishingMovementWindow,
   type FishingTimelineEntry,
 } from "@/domain/fishing";
-import { SWIM_RULES, type SwimRules } from "@/config/rules";
+import { FISHING_RULES, SWIM_RULES, type SwimRules } from "@/config/rules";
 import { localDateForInstant } from "@/domain/time";
 import type { WindShift } from "@/domain/wind";
 import { useCurrentTime } from "@/hooks/use-current-time";
 import type {
+  MarineDataset,
   OfficialAlert,
   ProviderState,
   TideDataset,
@@ -99,11 +100,102 @@ function movementWindText(movement: FishingMovementWindow): string {
 
   const speed = formatNumber(movement.windSpeedKmh, 0);
   const from = movement.windDirection ? ` from ${movement.windDirection}` : "";
+  const shore = movement.shoreWind ? ` (${movement.shoreWind})` : "";
   const gust =
     movement.windGustKmh === null
       ? ""
       : ` · gust ${formatNumber(movement.windGustKmh, 0)} km/h`;
-  return `Wind ${speed} km/h${from}${gust}`;
+  return `Wind ${speed} km/h${from}${shore}${gust}`;
+}
+
+function movementStrengthText(movement: FishingMovementWindow): string {
+  return `Estimated peak tide change ${movement.peakRateMPerH.toFixed(2)} m/h · ${movement.strength} movement`;
+}
+
+function twilightText(movement: FishingMovementWindow): string | null {
+  return movement.twilightOverlap === null
+    ? null
+    : `Overlaps ${movement.twilightOverlap === "dawn" ? "dawn (sunrise)" : "dusk (sunset)"} twilight`;
+}
+
+function solunarText(movement: FishingMovementWindow): string | null {
+  return movement.solunarOverlap === null
+    ? null
+    : `Overlaps a solunar ${movement.solunarOverlap} period (derived lunar estimate)`;
+}
+
+function waveText(movement: FishingMovementWindow): string | null {
+  return movement.waveHeightM === null
+    ? null
+    : `Modeled wave height ${movement.waveHeightM.toFixed(1)} m`;
+}
+
+function focusedCandidates(
+  days: readonly FishingForecastDay[],
+): FishingMovementWindow[] {
+  return days
+    .flatMap((day) => day.movementWindows)
+    .filter((movement) => movement.focus !== null)
+    .slice(0, FISHING_RULES.focusCandidateLimit);
+}
+
+interface FocusedCandidatesProps {
+  candidates: readonly FishingMovementWindow[];
+  todayLocalDate: string | null;
+}
+
+function FocusedCandidates({
+  candidates,
+  todayLocalDate,
+}: FocusedCandidatesProps) {
+  if (candidates.length === 0) {
+    return null;
+  }
+
+  return (
+    <section aria-labelledby="fishing-focus-heading" className="fishing-focus">
+      <div className="fishing-focus__heading">
+        <div>
+          <p className="eyebrow">Candidate focus</p>
+          <h3 id="fishing-focus-heading">Stronger, cleaner signals</h3>
+        </div>
+        <span className="fishing-focus__count">{candidates.length} shown</span>
+      </div>
+      <p className="fishing-focus__note">
+        Focused candidates still pass the same wind and alert gate, then add
+        cleaner wind plus stronger tide movement or timing context. The full
+        timeline remains below.
+      </p>
+      <ol className="fishing-focus__list">
+        {candidates.map((movement) => (
+          <li
+            className={`fishing-focus__item fishing-focus__item--${movement.focus?.level ?? "context"}`}
+            key={`focus:${movement.midpointAt}`}
+          >
+            <p className="fishing-focus__title">
+              {dayLabel(movement.localDate, todayLocalDate)} ·{" "}
+              {movement.direction}
+            </p>
+            <p className="fishing-focus__window">
+              {entryTime(movement.startAt)} – {entryTime(movement.endAt)}{" "}
+              Eastern
+            </p>
+            <ul
+              aria-label="Why this candidate is focused"
+              className="fishing-focus__reasons"
+            >
+              {movement.focus?.reasons.map((reason) => (
+                <li key={reason}>{reason}</li>
+              ))}
+            </ul>
+            <p className="fishing-focus__detail">
+              {movementStrengthText(movement)} · {movementWindText(movement)}
+            </p>
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
 }
 
 interface MovementBodyProps {
@@ -112,6 +204,9 @@ interface MovementBodyProps {
 }
 
 function MovementBody({ isStale, movement }: MovementBodyProps) {
+  const candidateLabel =
+    movement.focus === null ? "Candidate period" : movement.focus.label;
+
   return (
     <>
       <p className="fishing-entry__title">
@@ -130,7 +225,7 @@ function MovementBody({ isStale, movement }: MovementBodyProps) {
           </p>
         ) : (
           <p className="fishing-entry__state fishing-entry__state--candidate">
-            <span aria-hidden="true">◆</span> Candidate period
+            <span aria-hidden="true">◆</span> {candidateLabel}
           </p>
         )
       ) : (
@@ -142,9 +237,17 @@ function MovementBody({ isStale, movement }: MovementBodyProps) {
         aria-label="Reasoning attached to this period"
         className="fishing-entry__reasons"
       >
+        <li>{movementStrengthText(movement)}</li>
         <li>{movementWindText(movement)}</li>
+        {waveText(movement) !== null ? <li>{waveText(movement)}</li> : null}
         <li>Pressure: {movement.pressureTendency.label}</li>
         <li>Predicted tide range {movement.rangeM.toFixed(2)} m</li>
+        {twilightText(movement) !== null ? (
+          <li>{twilightText(movement)}</li>
+        ) : null}
+        {solunarText(movement) !== null ? (
+          <li>{solunarText(movement)}</li>
+        ) : null}
       </ul>
       <p className="fishing-entry__note">{movement.explanation}</p>
     </>
@@ -179,7 +282,9 @@ function TimelineEntry({ entry, isStale }: TimelineEntryProps) {
     entry.kind === "movement" && entry.movement.isCandidate
       ? isStale
         ? " fishing-entry--stale-candidate"
-        : " fishing-entry--candidate"
+        : entry.movement.focus
+          ? " fishing-entry--focused"
+          : " fishing-entry--candidate"
       : "";
 
   return (
@@ -221,6 +326,13 @@ function FishingDayGroup({
           Largest predicted tide range {day.maximumTideRangeM.toFixed(2)} m
         </p>
       ) : null}
+      {day.moonPhase !== null ? (
+        <p className="fishing-day__moon">
+          Moon: {day.moonPhase.phaseName} ·{" "}
+          {day.moonPhase.illuminationPct.toFixed(0)}% illuminated (derived
+          estimate)
+        </p>
+      ) : null}
       {day.events.length === 0 ? (
         <p className="fishing-day__note">
           Tide predictions do not cover this date, so its predicted events and
@@ -254,6 +366,7 @@ function unavailableMessage(hasTides: boolean, hasWeather: boolean): string {
 
 interface FishingOutlookProps {
   alerts?: readonly OfficialAlert[];
+  marine?: ProviderState<MarineDataset>;
   onRetryTides: () => void;
   onRetryWeather: () => void;
   rules?: Readonly<SwimRules>;
@@ -263,6 +376,7 @@ interface FishingOutlookProps {
 
 export function FishingOutlook({
   alerts = NO_ALERTS,
+  marine,
   onRetryTides,
   onRetryWeather,
   rules = SWIM_RULES,
@@ -273,6 +387,8 @@ export function FishingOutlook({
   const tideDataset = tides.data;
   const weatherDataset = weather.data;
   const weatherHours = weatherDataset?.hourly;
+  const solarDays = weatherDataset?.solarDays;
+  const marineHours = marine?.data?.hourly;
   const todayLocalDate =
     currentTime === null
       ? null
@@ -289,10 +405,20 @@ export function FishingOutlook({
             `${todayLocalDate}T12:00:00.000Z`,
             alerts,
             rules,
+            { marineHours, solarDays },
           )
         : [],
-    [alerts, rules, tideDataset, todayLocalDate, weatherHours],
+    [
+      alerts,
+      marineHours,
+      rules,
+      solarDays,
+      tideDataset,
+      todayLocalDate,
+      weatherHours,
+    ],
   );
+  const focusCandidates = useMemo(() => focusedCandidates(days), [days]);
   const isLoading =
     currentTime === null ||
     (!tideDataset && tides.status === "loading") ||
@@ -307,6 +433,12 @@ export function FishingOutlook({
     staleFeeds.push({ label: "weather", fetchedAt: weather.fetchedAt });
   }
   const isStale = staleFeeds.length > 0;
+  // Marine data only feeds informational wave-height lines, so its
+  // staleness names the feed and its age without demoting candidates.
+  const isMarineStale = marine?.status === "stale" && marineHours !== undefined;
+  if (isMarineStale) {
+    staleFeeds.push({ label: "marine data", fetchedAt: marine.fetchedAt });
+  }
 
   return (
     <section
@@ -321,11 +453,14 @@ export function FishingOutlook({
         <div className="data-status-row">
           <DataStatus label="NOAA" state={tides} />
           <DataStatus label="Weather" state={weather} />
+          {marine ? <DataStatus label="Marine" state={marine} /> : null}
         </div>
       </div>
       <p className="fishing-outlook__meta">
         NOAA predicted high/low events with each day&apos;s tide range, stronger
-        estimated tidal-movement periods, and modeled wind and pressure context.
+        estimated tidal-movement periods graded by estimated peak tide change,
+        and modeled wind, wave, pressure, twilight, and derived lunar context.
+        Context lines are informational and do not change candidate status.
         Times are Eastern.
       </p>
       {isLoading ? (
@@ -380,7 +515,7 @@ export function FishingOutlook({
         </div>
       ) : (
         <>
-          {isStale ? (
+          {staleFeeds.length > 0 ? (
             // Visible warning only; the page-level provider notices already
             // announce the failure once (UX_DESIGN §10), so no live region.
             <p className="outlook-stale-notice">
@@ -390,9 +525,16 @@ export function FishingOutlook({
                   staleFeedSentence(feed.label, feed.fetchedAt, currentTime),
                 )
                 .join(" ")}{" "}
-              The movement periods below are derived from stale data and may be
-              outdated.
+              {isStale
+                ? "The movement periods below are derived from stale data and may be outdated."
+                : "Modeled wave heights below come from stale marine data and may be outdated."}
             </p>
+          ) : null}
+          {!isStale ? (
+            <FocusedCandidates
+              candidates={focusCandidates}
+              todayLocalDate={todayLocalDate}
+            />
           ) : null}
           {!weatherDataset ? (
             <div className="fishing-outlook__unavailable">

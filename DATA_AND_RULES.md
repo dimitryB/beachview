@@ -319,6 +319,33 @@ The cosine tide curve changes fastest near the midpoint between adjacent extrema
 
 Describe this as “stronger estimated tidal movement.”
 
+#### 13.2.1 Movement strength grading
+
+The derivative of the cosine curve peaks at the midpoint with:
+
+```text
+peakRateMPerH = π × tideRangeM / (2 × durationHours)
+```
+
+| Estimated peak rate | Strength |
+| ------------------- | -------- |
+| `>= 0.28 m/h`       | Strong   |
+| `>= 0.18 m/h`       | Moderate |
+| Below               | Weak     |
+
+The thresholds bracket the typical Sandbridge mean range (about 1 m over ~6.2 h ≈ 0.25 m/h) so springs grade strong and neaps grade weak. Display the rate with the grade; the grade is informational and never changes candidacy.
+
+#### 13.2.2 Informational context attached to movement windows
+
+Each movement window also carries, when the source data exists:
+
+- Dawn/dusk overlap: the window overlaps sunrise or sunset `±60 minutes` (Open-Meteo solar days).
+- Shore-relative wind: wind-from direction within `45°` of the shore-facing bearing (`90°`, east) is onshore, `135°` or more away is offshore, otherwise alongshore.
+- Modeled wave height: closest Open-Meteo Marine hour within `90 minutes` of the midpoint. A stale marine feed is named with its age in the outlook's stale notice; because wave lines are informational, stale marine data does not demote a candidate the way stale tide or weather data does.
+- Solunar overlap: see 13.5.
+
+Every field is null when its input is unavailable, and none of them affects candidate status (13.4).
+
 ### 13.3 Wind shifts
 
 Calculate the smallest circular direction difference. A proposed material shift is:
@@ -338,7 +365,26 @@ A generic candidate window:
 - Does not overlap an official severe weather or surf alert
 - Includes its tide direction, wind, gust, and pressure tendency
 
+Candidate status is intentionally broad. A separate “candidate focus” presentation may surface a smaller set of candidates when all of these are true:
+
+- The window already passes the generic candidate gate.
+- Estimated movement is moderate or strong.
+- Sustained wind and gust are both below the configured warning thresholds, not just below the strong-wind gate.
+- The window either has strong estimated movement or has at least one extra timing/context signal, such as a major solunar overlap or dawn/dusk overlap.
+
+Focused candidates are listed chronologically and limited to the configured count. They are not a universal score, do not hide the full tide timeline, and do not change candidate status.
+
 Do not rank one universal “best” time until target species, season, and fishing method are defined.
+
+### 13.5 Derived lunar context
+
+Moon values are computed locally from a low-precision lunar ephemeris (truncated Meeus series, direction accuracy within a fraction of a degree, derived instants within a few minutes). Label them as derived estimates; they are never an official product.
+
+- Daily moon phase: phase name (eight 45° sectors of sun–moon elongation) and illuminated percentage, evaluated once per local day.
+- Solunar majors: `±60 minutes` around each lunar transit (moon overhead or underfoot).
+- Solunar minors: `±30 minutes` around moonrise and moonset, using an effective horizon altitude of `+0.125°` (mean parallax minus refraction).
+
+A movement window that overlaps a major reports `major`; otherwise an overlapping minor reports `minor`. Solunar overlap is informational only and never changes candidate status.
 
 ## 14. Rule precedence
 

@@ -1,11 +1,11 @@
 import { MINUTE_MS, instantMilliseconds } from "@/domain/time";
 import type { WeatherForecastHour } from "@/types/domain";
 
-export function findClosestWeatherHour(
+export function findClosestHour<T extends { validAt: string }>(
   instant: string,
-  hours: readonly WeatherForecastHour[],
+  hours: readonly T[],
   toleranceMinutes = 90,
-): WeatherForecastHour | null {
+): T | null {
   const target = instantMilliseconds(instant);
   if (
     target === null ||
@@ -15,7 +15,7 @@ export function findClosestWeatherHour(
     return null;
   }
 
-  let closest: WeatherForecastHour | null = null;
+  let closest: T | null = null;
   let closestDistance = Number.POSITIVE_INFINITY;
 
   for (const hour of hours) {
@@ -32,4 +32,12 @@ export function findClosestWeatherHour(
   }
 
   return closestDistance <= toleranceMinutes * MINUTE_MS ? closest : null;
+}
+
+export function findClosestWeatherHour(
+  instant: string,
+  hours: readonly WeatherForecastHour[],
+  toleranceMinutes = 90,
+): WeatherForecastHour | null {
+  return findClosestHour(instant, hours, toleranceMinutes);
 }
